@@ -1,5 +1,10 @@
 server:
   port: 8055
+app:
+  bot:
+    name: "Simple Bot"
+    model: "gpt-4o"
+    instructions: "You are a very picky teacher trying to help a taxing student"
 spring:
   data:
     mongodb:

@@ -16,8 +16,8 @@ import java.util.Map;
 @Data
 @Component
 public class WikiDocumentsRepository {
-    private final VectorStore vectorStore;
     private static final Logger logger = LoggerFactory.getLogger(WikiDocumentsRepository.class);
+    private final VectorStore vectorStore;
 
     public void saveWikiDocument(WikiDocument wikiDocument) {
         logger.info("Saving WikiDocument: {}", wikiDocument);
