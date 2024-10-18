@@ -3,6 +3,7 @@ package org.example.controller;
 import lombok.Data;
 import org.example.service.RagService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/docs")
 public class DocsLoaderController {
 
-    public static final String DOCS_PATH= "documentation/test.json";
+    public static final String DOCS_PATH= "documentation/test-hf.json";
 
     private final RagService docsLoaderService;
 
@@ -21,8 +22,11 @@ public class DocsLoaderController {
     }
 
     @GetMapping("/load")
-    public String loadDocuments() {
-        return docsLoaderService.loadDocs(DOCS_PATH);
+    public ResponseEntity<Void> loadDocuments() {
+        if(docsLoaderService.loadDocs(DOCS_PATH)){
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.badRequest().build();
     }
 
 }

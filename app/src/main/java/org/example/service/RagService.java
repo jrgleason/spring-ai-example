@@ -3,7 +3,8 @@ package org.example.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,8 @@ import java.util.Map;
 
 @Service
 public class RagService {
+    private static final Logger logger = LoggerFactory.getLogger(RagService.class);
+
     private static final int MAX_TOKENS_PER_CHUNK = 2000;
     private final VectorStore vectorStore;
     private final ObjectMapper objectMapper;
@@ -32,40 +35,42 @@ public class RagService {
         this.objectMapper = objectMapper;
     }
 
-    public String loadDocs(String filePath) {
+    public boolean loadDocs(String filePath) {
         try (InputStream inputStream = new ClassPathResource(filePath).getInputStream();
              BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-            List<Document> documents = new ArrayList<>();
+            StringBuilder contentBuilder = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
-                try {
-                    Map<String, Object> jsonDoc = objectMapper.readValue(line, Map.class);
-                    String content = (String) jsonDoc.get("body");
-                    if (content != null) {
-                        List<String> chunks = splitIntoChunks(content, MAX_TOKENS_PER_CHUNK);
-                        for (String chunk : chunks) {
-                            Document document = createDocument(jsonDoc, chunk);
-                            documents.add(document);
-                        }
-                        if (documents.size() >= 100) {
-                            vectorStore.add(documents);
-                            documents.clear();
-                        }
-                    } else {
-                        return "Error: 'body' field is missing in the JSON document.";
-                    }
-                } catch (JsonMappingException e) {
-                    return "JSON mapping error at line: " + line + " - " + e.getMessage();
-                } catch (JsonProcessingException e) {
-                    return "JSON processing error at line: " + line + " - " + e.getMessage();
-                }
+                contentBuilder.append(line);
             }
+            String fileContent = contentBuilder.toString();
+
+            List<Document> documents = new ArrayList<>();
+            Map<String, Object> jsonDoc = objectMapper.readValue(fileContent, Map.class);
+            String content = (String) jsonDoc.get("body");
+            if (content != null) {
+                List<String> chunks = splitIntoChunks(content, MAX_TOKENS_PER_CHUNK);
+                for (String chunk : chunks) {
+                    Document document = createDocument(jsonDoc, chunk);
+                    documents.add(document);
+                }
+                if (documents.size() >= 100) {
+                    vectorStore.add(documents);
+                    documents.clear();
+                }
+            } else {
+                logger.error("Error: 'body' field is missing in the JSON document.");
+                return false;
+            }
+
             if (!documents.isEmpty()) {
                 vectorStore.add(documents);
             }
-            return "All documents added successfully!";
+            logger.info("Documents saved to vectorStore: {}", documents);
+            return true;
         } catch (Exception e) {
-            return "An error occurred while adding documents: " + e.getMessage() + Arrays.toString(e.getStackTrace());
+            logger.error("An error occurred while adding documents: " + e.getMessage() + Arrays.toString(e.getStackTrace()));
+            return false;
         }
     }
 
