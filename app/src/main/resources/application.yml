@@ -1,0 +1,19 @@
+server:
+  port: 8055
+spring:
+  data:
+    mongodb:
+      uri: mongodb://admin:password@10.0.0.58:30087/admin
+      database: wiki
+  ai:
+    vectorstore:
+      mongodb:
+        collection-name: vector_store
+        initialize-schema: true
+        path-name: embedding
+        indexName: vector_index
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o
