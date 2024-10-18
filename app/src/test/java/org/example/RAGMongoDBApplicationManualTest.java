@@ -20,6 +20,7 @@ class RAGMongoDBApplicationManualTest {
     private MockMvc mockMvc;
 
     @Test
+    @Disabled("Need to figure out how to have an actual mongo instance")
     void givenMongoDBVectorStore_whenCallingPostDocumentEndpoint_thenExpectedResponseCodeShouldBeReturned() throws Exception {
         mockMvc.perform(post("/wiki?filePath={filePath}",
                         "src/test/resources/documentation/owl-documentation.md"))
