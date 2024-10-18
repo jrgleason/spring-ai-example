@@ -1,5 +1,3 @@
-server:
-  port: 8055
 app:
   bot:
     name: "Simple Bot"
@@ -8,7 +6,6 @@ app:
 spring:
   data:
     mongodb:
-      uri: mongodb://admin:password@10.0.0.58:30087/admin
       database: wiki
   ai:
     vectorstore:
