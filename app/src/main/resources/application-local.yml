@@ -1,0 +1,6 @@
+server:
+  port: 8055
+spring:
+  data:
+    mongodb:
+      uri: mongodb://admin:password@localhost:27017/admin

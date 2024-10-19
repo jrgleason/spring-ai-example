@@ -19,7 +19,9 @@ public class AuthConfig {
     private String openAiKey;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http
+    ) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authz) -> authz
                         .anyRequest().permitAll()
@@ -29,12 +31,23 @@ public class AuthConfig {
 
     @Bean
     public EmbeddingModel embeddingModel() {
-        return new OpenAiEmbeddingModel(new OpenAiApi(openAiKey));
+        return new OpenAiEmbeddingModel(
+                new OpenAiApi(openAiKey)
+        );
     }
 
     @Bean
-    public VectorStore mongodbVectorStore(MongoTemplate mongoTemplate, EmbeddingModel embeddingModel) {
-        return new MongoDBAtlasVectorStore(mongoTemplate, embeddingModel,
-                MongoDBAtlasVectorStore.MongoDBVectorStoreConfig.builder().build(), true);
+    public VectorStore mongodbVectorStore(
+            MongoTemplate mongoTemplate,
+            EmbeddingModel embeddingModel
+    ) {
+        return new MongoDBAtlasVectorStore(
+                mongoTemplate,
+                embeddingModel,
+                MongoDBAtlasVectorStore
+                        .MongoDBVectorStoreConfig
+                        .builder()
+                        .build(),
+                true);
     }
 }

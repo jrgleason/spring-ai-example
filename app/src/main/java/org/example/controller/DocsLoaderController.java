@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/docs")
 public class DocsLoaderController {
 
-    public static final String DOCS_PATH= "documentation/test-hf.json";
+    public static final String DOCS_PATH = "documentation/test-hf.json";
 
     private final RagService docsLoaderService;
 
@@ -23,7 +23,7 @@ public class DocsLoaderController {
 
     @GetMapping("/load")
     public ResponseEntity<Void> loadDocuments() {
-        if(docsLoaderService.loadDocs(DOCS_PATH)){
+        if (docsLoaderService.loadDocs(DOCS_PATH)) {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.badRequest().build();

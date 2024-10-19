@@ -1,5 +1,6 @@
 package org.example;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,12 +15,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
+@Disabled("Need to figure out how to have an actual mongo instance")
 class RAGMongoDBApplicationManualTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Test
+    @Disabled("Need to figure out how to have an actual mongo instance")
     void givenMongoDBVectorStore_whenCallingPostDocumentEndpoint_thenExpectedResponseCodeShouldBeReturned() throws Exception {
         mockMvc.perform(post("/wiki?filePath={filePath}",
                         "src/test/resources/documentation/owl-documentation.md"))
