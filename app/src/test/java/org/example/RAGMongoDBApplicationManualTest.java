@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
+@Disabled("Need to figure out how to have an actual mongo instance")
 class RAGMongoDBApplicationManualTest {
 
     @Autowired
