@@ -4,6 +4,8 @@ app:
     model: "gpt-4o"
     instructions: "You are a very picky teacher trying to help a taxing student"
 spring:
+  application:
+    name: "my-spring-ai"
   data:
     mongodb:
       database: wiki
@@ -14,8 +16,3 @@ spring:
         initialize-schema: true
         path-name: embedding
         indexName: vector_index
-    openai:
-      api-key: ${OPENAI_API_KEY}
-      chat:
-        options:
-          model: gpt-4o

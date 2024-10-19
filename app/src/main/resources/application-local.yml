@@ -1,6 +1,29 @@
 server:
   port: 8055
+mqtt:
+  server:
+    uri: mqtt://localhost:1883
+  username: jrg
+  password: ${ADMIN_PASSWORD}
+  client-id: mqtt-client-${random.uuid}
+  completion-timeout: 5000
+  topics:
+    - zwave
 spring:
+  integration:
+    mqtt:
+      inbound:
+        client-id: ${mqtt.client-id}
+        url: ${mqtt.server.uri}
+        topics: ${mqtt.topics}
+        qos: 1
+        auto-startup: true
   data:
     mongodb:
       uri: mongodb://admin:password@localhost:27017/admin
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-3.5-turbo
