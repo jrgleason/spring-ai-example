@@ -38,8 +38,12 @@ public class HaConfig {
     @Value("${mqtt.completion-timeout}")
     private int completionTimeout;
 
-//    @Value("${mqtt.topics}")
-    private String[] topics = {"zwave"};
+    @Value("${mqtt.topics}")
+    private String topics;
+
+    public String[] getTopics() {
+        return topics.split(",");
+    }
 
     @Bean
     public MqttPahoClientFactory mqttClientFactory() {
@@ -62,7 +66,7 @@ public class HaConfig {
     public MessageProducer inbound() {
         MqttPahoMessageDrivenChannelAdapter adapter =
                 new MqttPahoMessageDrivenChannelAdapter(clientId, mqttClientFactory(),
-                        getTopicsWithWildcard(topics));
+                        getTopicsWithWildcard(this.getTopics()));
         adapter.setCompletionTimeout(completionTimeout);
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(1);

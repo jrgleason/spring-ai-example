@@ -7,8 +7,7 @@ mqtt:
   password: ${ADMIN_PASSWORD}
   client-id: mqtt-client-${random.uuid}
   completion-timeout: 5000
-  topics:
-    - zwave
+  topics: zwave
 spring:
   integration:
     mqtt:
