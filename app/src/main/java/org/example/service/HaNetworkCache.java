@@ -9,10 +9,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 @Service
 public class HaNetworkCache {
@@ -46,8 +43,6 @@ public class HaNetworkCache {
         ObjectNode roomsNode = rootNode.putObject("rooms");
         ObjectNode systemDevicesNode = rootNode.putObject("system_devices");
 
-        Set<String> processedTopics = new HashSet<>();
-
         Set<String> allTopics = getAllTopics();
 
         for (String topic : allTopics) {
@@ -62,9 +57,9 @@ public class HaNetworkCache {
             } else {
                 processRoomDevice(roomsNode, room, device, topic);
             }
-
-            processedTopics.add(topic);
         }
+
+        cleanupJson(rootNode);
 
         try {
             return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootNode);
@@ -81,17 +76,11 @@ public class HaNetworkCache {
                 : systemDevicesNode.putObject(device);
 
         deviceNode.put("type", "Z-Wave Gateway");
-        ArrayNode functionalitiesNode = deviceNode.has("functionalities")
-                ? (ArrayNode) deviceNode.get("functionalities")
-                : deviceNode.putArray("functionalities");
 
         String functionality = parts[parts.length - 1];
-        functionalitiesNode.add(functionality);
-
-        // Add current value from Redis
         String currentValue = getState(topic);
         if (currentValue != null) {
-            deviceNode.put(functionality + "_value", currentValue);
+            deviceNode.set(functionality, parseJsonIfPossible(currentValue));
         }
     }
 
@@ -110,17 +99,14 @@ public class HaNetworkCache {
 
         deviceNode.put("type", getDeviceType(device));
 
-        ArrayNode functionalitiesNode = deviceNode.has("functionalities")
-                ? (ArrayNode) deviceNode.get("functionalities")
-                : deviceNode.putArray("functionalities");
+        ObjectNode functionalitiesNode = deviceNode.has("functionalities")
+                ? (ObjectNode) deviceNode.get("functionalities")
+                : deviceNode.putObject("functionalities");
 
-        addFunctionality(functionalitiesNode, topic);
-
-        // Add current value from Redis
+        String functionality = topic.substring(topic.lastIndexOf("/") + 1);
         String currentValue = getState(topic);
         if (currentValue != null) {
-            String functionality = topic.substring(topic.lastIndexOf("/") + 1);
-            deviceNode.set(functionality + "_value", parseJsonIfPossible(currentValue));
+            functionalitiesNode.set(functionality, parseJsonIfPossible(currentValue));
         }
     }
 
@@ -142,49 +128,78 @@ public class HaNetworkCache {
         return deviceName;
     }
 
-    private void addFunctionality(ArrayNode functionalitiesNode, String topic) {
-        boolean functionalityAdded = false;
+    private void cleanupJson(ObjectNode rootNode) {
+        cleanupNode(rootNode);
+    }
 
-        if (topic.contains("currentValue") || topic.contains("targetValue")) {
-            addUniqueValue(functionalitiesNode, "dimming");
-            functionalityAdded = true;
-        }
-        if (topic.contains("level")) {
-            addUniqueValue(functionalitiesNode, "on/off");
-            functionalityAdded = true;
-        }
-        if (topic.contains("dimmingDuration")) {
-            addUniqueValue(functionalitiesNode, "dimming_duration");
-            functionalityAdded = true;
-        }
-        if (topic.contains("scene")) {
-            addUniqueValue(functionalitiesNode, "scene_control");
-            functionalityAdded = true;
-        }
-        if (topic.contains("userCode")) {
-            addUniqueValue(functionalitiesNode, "user_codes");
-            functionalityAdded = true;
-        }
-        if (topic.contains("mode")) {
-            addUniqueValue(functionalitiesNode, "mode");
-            functionalityAdded = true;
-        }
-        if (topic.toLowerCase().contains("lock")) {
-            addUniqueValue(functionalitiesNode, "lock/unlock");
-            functionalityAdded = true;
-        }
+    private void cleanupNode(JsonNode node) {
+        if (node.isObject()) {
+            ObjectNode objectNode = (ObjectNode) node;
+            Iterator<Map.Entry<String, JsonNode>> fields = objectNode.fields();
+            Set<String> fieldsToRemove = new HashSet<>();
 
-        // If no predefined functionality was added, add the last part of the topic as a functionality
-        if (!functionalityAdded) {
-            String[] topicParts = topic.split("/");
-            String lastPart = topicParts[topicParts.length - 1];
-            addUniqueValue(functionalitiesNode, lastPart);
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> entry = fields.next();
+                String key = entry.getKey();
+                JsonNode value = entry.getValue();
+
+                if (value.isObject() && value.size() == 0) {
+                    fieldsToRemove.add(key);
+                } else if (value.isObject() && value.has("time") && value.size() == 1) {
+                    fieldsToRemove.add(key);
+                } else if (key.endsWith("_value")) {
+                    // Move _value fields into their parent functionality
+                    String functionalityKey = key.substring(0, key.length() - 6);
+                    if (objectNode.has("functionalities")) {
+                        ObjectNode functionalitiesNode = (ObjectNode) objectNode.get("functionalities");
+                        functionalitiesNode.set(functionalityKey, value);
+                    }
+                    fieldsToRemove.add(key);
+                } else {
+                    cleanupNode(value);
+                }
+            }
+
+            for (String field : fieldsToRemove) {
+                objectNode.remove(field);
+            }
+
+            // Group similar functionalities
+            if (objectNode.has("functionalities")) {
+                groupSimilarFunctionalities((ObjectNode) objectNode.get("functionalities"));
+            }
+        } else if (node.isArray()) {
+            ArrayNode arrayNode = (ArrayNode) node;
+            for (JsonNode element : arrayNode) {
+                cleanupNode(element);
+            }
         }
     }
 
-    private void addUniqueValue(ArrayNode arrayNode, String value) {
-        if (!arrayNode.toString().contains("\"" + value + "\"")) {
-            arrayNode.add(value);
+    private void groupSimilarFunctionalities(ObjectNode functionalitiesNode) {
+        Map<String, ArrayNode> groupedFunctionalities = new HashMap<>();
+        Iterator<Map.Entry<String, JsonNode>> fields = functionalitiesNode.fields();
+        Set<String> fieldsToRemove = new HashSet<>();
+
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> entry = fields.next();
+            String key = entry.getKey();
+            JsonNode value = entry.getValue();
+
+            if (key.matches("\\d+")) {
+                String groupKey = "numbered_functionalities";
+                groupedFunctionalities.computeIfAbsent(groupKey, k -> functionalitiesNode.arrayNode())
+                        .add(objectMapper.createObjectNode().set(key, value));
+                fieldsToRemove.add(key);
+            }
+        }
+
+        for (Map.Entry<String, ArrayNode> entry : groupedFunctionalities.entrySet()) {
+            functionalitiesNode.set(entry.getKey(), entry.getValue());
+        }
+
+        for (String field : fieldsToRemove) {
+            functionalitiesNode.remove(field);
         }
     }
 
