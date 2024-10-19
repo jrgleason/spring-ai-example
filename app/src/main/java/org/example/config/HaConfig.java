@@ -2,6 +2,7 @@ package org.example.config;
 
 import jakarta.annotation.PostConstruct;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.example.service.HaNetworkCache;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,6 +41,12 @@ public class HaConfig {
 
     @Value("${mqtt.topics}")
     private String topics;
+
+    private final HaNetworkCache haNetworkCache;
+
+    public HaConfig(HaNetworkCache haNetworkCache) {
+        this.haNetworkCache = haNetworkCache;
+    }
 
     public String[] getTopics() {
         return topics.split(",");
@@ -87,6 +94,7 @@ public class HaConfig {
             String topic = message.getHeaders().get("mqtt_receivedTopic").toString();
             String payload = message.getPayload().toString();
             logger.info("Received message from topic {}: {}", topic, payload);
+            haNetworkCache.updateState(topic, payload);
         };
     }
     @PostConstruct
