@@ -6,6 +6,10 @@ app:
 spring:
   application:
     name: "my-spring-ai"
+  cache:
+    cache-names: smartHomeJson
+    caffeine:
+      spec: maximumSize=1,expireAfterWrite=5s
   data:
     mongodb:
       database: wiki

@@ -20,7 +20,7 @@ public class HaController {
 
     @GetMapping(value="/status", produces= MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> getSmartHomeStatus() {
-        String smartHomeJson = haNetworkCache.generateSmartHomeJson();
+        String smartHomeJson = haNetworkCache.getSmartHomeJson();
         return ResponseEntity.ok(smartHomeJson);
     }
 }
