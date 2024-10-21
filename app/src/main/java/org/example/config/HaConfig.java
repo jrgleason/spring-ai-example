@@ -3,6 +3,8 @@ package org.example.config;
 import jakarta.annotation.PostConstruct;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.example.service.HaNetworkCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,33 +18,23 @@ import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 @Configuration
 public class HaConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(HaConfig.class);
-
+    private final HaNetworkCache haNetworkCache;
     @Value("${mqtt.server.uri}")
     private String serverUri;
-
     @Value("${mqtt.client-id}")
     private String clientId;
-
     @Value("${mqtt.username}")
     private String username;
-
     @Value("${mqtt.password}")
     private String password;
-
     @Value("${mqtt.completion-timeout}")
     private int completionTimeout;
-
     @Value("${mqtt.topics}")
     private String topics;
-
-    private final HaNetworkCache haNetworkCache;
 
     public HaConfig(HaNetworkCache haNetworkCache) {
         this.haNetworkCache = haNetworkCache;
@@ -57,7 +49,7 @@ public class HaConfig {
         logger.info("Creating the Mqtt Factory");
         DefaultMqttPahoClientFactory factory = new DefaultMqttPahoClientFactory();
         MqttConnectOptions options = new MqttConnectOptions();
-        options.setServerURIs(new String[] {serverUri});
+        options.setServerURIs(new String[]{serverUri});
         options.setUserName(username);
         options.setPassword(password.toCharArray());
         factory.setConnectionOptions(options);
@@ -97,6 +89,7 @@ public class HaConfig {
             haNetworkCache.updateState(topic, payload);
         };
     }
+
     @PostConstruct
     public void logConfig() {
         logger.info(

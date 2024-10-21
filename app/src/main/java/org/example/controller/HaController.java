@@ -18,7 +18,7 @@ public class HaController {
         this.haNetworkCache = haNetworkCache;
     }
 
-    @GetMapping(value="/status", produces= MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> getSmartHomeStatus() {
         String smartHomeJson = haNetworkCache.getSmartHomeJson();
         return ResponseEntity.ok(smartHomeJson);

@@ -7,13 +7,11 @@ import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Data
 @Service
@@ -23,10 +21,32 @@ public class SmartHomeVector {
     private final ObjectMapper objectMapper;
     private final HaNetworkCache haNetworkCache;
 
-    public void updateSmartHomeVectors() throws JsonProcessingException {
-        String smartHomeJson = haNetworkCache.getSmartHomeJson();
+    public void updateSmartHomeVectors() throws JsonProcessingException, InterruptedException {
+        String smartHomeJson = haNetworkCache.generateSmartHomeJson();
         List<Document> documents = tokenizeSmartHomeStatus(smartHomeJson);
+        Document door = new Document(
+                "door",
+                Map.of("value", "open")
+        );
+        documents.add(door);
         vectorStore.add(documents);
+        Thread.sleep(25000);
+        List<Document> doors = vectorStore.similaritySearch("door");
+
+        // From test
+        List<Document> ds = List.of(
+                new Document(
+                        "Spring AI rocks!! Spring AI rocks!! Spring AI rocks!! Spring AI rocks!! Spring AI rocks!!",
+                        Collections.singletonMap("meta1", "meta1")),
+                new Document("Hello World Hello World Hello World Hello World Hello World Hello World Hello World"),
+                new Document(
+                        "Great Depression Great Depression Great Depression Great Depression Great Depression Great Depression",
+                        Collections.singletonMap("meta2", "meta2")));
+
+        vectorStore.add(ds);
+        Thread.sleep(25000); // Await a second for the document to be indexed
+
+        List<Document> rs = vectorStore.similaritySearch(SearchRequest.query("Great").withTopK(1));
         logger.warn("Smart Home Vectors Updated");
     }
 

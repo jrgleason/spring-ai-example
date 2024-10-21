@@ -28,7 +28,7 @@ public class ChatController {
                     defaultValue = "How to analyze time-series data with Python and MongoDB?"
             ) String message
     ) {
-        String responseContent = chatClient.prompt( )
+        String responseContent = chatClient.prompt()
                 .user(message)
                 .call()
                 .content();

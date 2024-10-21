@@ -1,8 +1,12 @@
 package org.example.config;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Data;
+import org.example.service.SmartHomeVector;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
+import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -26,16 +30,23 @@ public class ChatClientConfig {
     @Bean
     public ChatClient buildClient(
             ChatClient.Builder builder,
-            VectorStore vectorStore
-    ) {
+            VectorStore vectorStore,
+            SmartHomeVector smartHomeVector
+    ) throws JsonProcessingException, InterruptedException {
+        smartHomeVector.updateSmartHomeVectors();
         if (vectorStore == null) {
             throw new IllegalArgumentException("VectorStore is not initialized properly");
         }
         return builder
-                .defaultAdvisors(new QuestionAnswerAdvisor(
-                        vectorStore,
-                        SearchRequest.defaults()
-                ))
+                .defaultAdvisors(
+                        // To remember the convo
+                        new MessageChatMemoryAdvisor(new InMemoryChatMemory()),
+                        // To add stuff from the Vector Store
+                        new QuestionAnswerAdvisor(
+                                vectorStore,
+                                SearchRequest.defaults()
+                        )
+                )
                 .defaultSystem(instructions)
                 .defaultOptions(new OpenAiChatOptions())
                 .build();
