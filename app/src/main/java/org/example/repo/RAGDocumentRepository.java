@@ -15,11 +15,11 @@ import java.util.Map;
 
 @Data
 @Component
-public class WikiDocumentsRepository {
-    private static final Logger logger = LoggerFactory.getLogger(WikiDocumentsRepository.class);
+public class RAGDocumentRepository {
+    private static final Logger logger = LoggerFactory.getLogger(RAGDocumentRepository.class);
     private final VectorStore vectorStore;
 
-    public void saveWikiDocument(WikiDocument wikiDocument) {
+    public void saveDocument(WikiDocument wikiDocument) {
         logger.info("Saving WikiDocument: {}", wikiDocument);
 
         Map<String, Object> metadata = new HashMap<>();

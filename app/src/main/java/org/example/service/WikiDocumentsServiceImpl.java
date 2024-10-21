@@ -2,7 +2,7 @@ package org.example.service;
 
 import lombok.Data;
 import org.example.model.WikiDocument;
-import org.example.repo.WikiDocumentsRepository;
+import org.example.repo.RAGDocumentRepository;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -12,7 +12,7 @@ import java.nio.file.Path;
 @Data
 @Service
 public class WikiDocumentsServiceImpl {
-    private final WikiDocumentsRepository wikiDocumentsRepository;
+    private final RAGDocumentRepository RAGDocumentRepository;
 
     public void saveWikiDocument(String filePath) {
         try {
@@ -21,7 +21,7 @@ public class WikiDocumentsServiceImpl {
             wikiDocument.setFilePath(filePath);
             wikiDocument.setContent(content);
 
-            wikiDocumentsRepository.saveWikiDocument(wikiDocument);
+            RAGDocumentRepository.saveDocument(wikiDocument);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
