@@ -3,6 +3,22 @@ print("Connected to database: " + db.getName());
 print("Collections in this database: " + JSON.stringify(db.getCollectionNames()));
 var count = db.vector_store.countDocuments();
 print("Document count in vector_store: " + count);
+
+try {
+    var first = db.vector_store.findOne();
+    print("First document in vector_store: " + JSON.stringify(first));
+    var count = db.vector_store.countDocuments({
+        "fieldName": { $regex: "\\bdoor\\b", $options: "i" } // Adjust "fieldName" to the actual field you want to search
+    });
+
+    // Print the count
+    print("Total matches containing door: " + count);
+} catch (ex) {
+    print("An error occurred: " + ex);
+} finally {
+    print("Count operation completed");
+}
+
 try {
     var count = db.vector_store.aggregate(
         [{
