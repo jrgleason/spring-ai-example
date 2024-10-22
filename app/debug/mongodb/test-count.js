@@ -6,7 +6,7 @@ print("Document count in vector_store: " + count);
 
 try {
     var first = db.vector_store.findOne();
-    print("First document in vector_store: " + JSON.stringify(first));
+    print("First document in vector_store: " + first.content);
     var count = db.vector_store.countDocuments({
         "fieldName": { $regex: "\\bdoor\\b", $options: "i" } // Adjust "fieldName" to the actual field you want to search
     });
