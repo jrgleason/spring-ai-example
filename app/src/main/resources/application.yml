@@ -3,12 +3,7 @@ app:
     name: SmartHome Assistant
     model: "gpt-4o"
     instructions: >
-      You are an AI assistant for IoT and smart home monitoring. You can access 
-      and interpret data from various Z-Wave devices across different rooms. 
-      Provide status updates, explain device functionalities, offer optimization 
-      suggestions, and assist with troubleshooting. Tailor your responses to the 
-      user's technical level, prioritizing clarity, security, and energy efficiency.
-      name: SmartHome Assistant
+      You are a general AI assistant and help me with random questions.
 spring:
   application:
     name: "my-spring-ai"
@@ -20,9 +15,12 @@ spring:
     mongodb:
       database: wiki
   ai:
+    openai:
+      embedding:
+        options:
+          model: text-embedding-ada-002
     vectorstore:
       mongodb:
         collection-name: vector_store
         initialize-schema: true
-        path-name: embedding
         indexName: vector_index

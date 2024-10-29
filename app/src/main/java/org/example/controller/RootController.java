@@ -11,4 +11,6 @@ public class RootController {
     public ResponseEntity<Void> rootEndpoint() {
         return ResponseEntity.ok().build();
     }
+
+
 }

@@ -15,9 +15,6 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class AuthConfig {
-    @Value("${spring.ai.openai.api-key}")
-    private String openAiKey;
-
     @Bean
     public SecurityFilterChain filterChain(
             HttpSecurity http
@@ -27,27 +24,5 @@ public class AuthConfig {
                         .anyRequest().permitAll()
                 );
         return http.build();
-    }
-
-    @Bean
-    public EmbeddingModel embeddingModel() {
-        return new OpenAiEmbeddingModel(
-                new OpenAiApi(openAiKey)
-        );
-    }
-
-    @Bean
-    public VectorStore mongodbVectorStore(
-            MongoTemplate mongoTemplate,
-            EmbeddingModel embeddingModel
-    ) {
-        return new MongoDBAtlasVectorStore(
-                mongoTemplate,
-                embeddingModel,
-                MongoDBAtlasVectorStore
-                        .MongoDBVectorStoreConfig
-                        .builder()
-                        .build(),
-                true);
     }
 }
