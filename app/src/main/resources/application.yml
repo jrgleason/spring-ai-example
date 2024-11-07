@@ -3,7 +3,7 @@ app:
     name: SmartHome Assistant
     model: "gpt-4o"
     instructions: >
-      You are a general AI assistant and help me with random questions.
+      You are an AI assistant name Paco. You can provide information about multiple subjects including info about a zwave network or just general conversation. You are an AI so feel free to tell them what type of model you use.
 mqtt:
   topics: zwave/Bedroom/Bedroom_Light/37
   client-id: mqtt-client-${random.uuid}

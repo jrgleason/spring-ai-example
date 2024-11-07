@@ -4,6 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.image.*;
+import org.springframework.ai.openai.OpenAiImageOptions;
+import org.springframework.ai.openai.api.OpenAiImageApi;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -22,14 +25,17 @@ public class ChatController {
     private final ChatClient chatClient;
     private final ChatClient anthropicChatClient;
     private final VectorStore vectorStore;
+    private final ImageModel imageModel;
 
     public ChatController(
             @Qualifier("buildClient") ChatClient client,
             @Qualifier("buildAnthropicClient") ChatClient anthropicClient,
-            VectorStore vectorStore ) {
+            VectorStore vectorStore,
+            ImageModel imageClient, ImageModel imageModel) {
         this.chatClient = client;
         this.anthropicChatClient = anthropicClient;
         this.vectorStore = vectorStore;
+        this.imageModel = imageModel;
     }
 
 
@@ -46,6 +52,20 @@ public class ChatController {
                 .content();
         return ResponseEntity.ok(responseContent);
     }
+
+    @GetMapping("/openai/image")
+    public String generate(@RequestParam(value = "message") String message) {
+        ImageOptions options = ImageOptionsBuilder.builder()
+                .withModel(OpenAiImageApi.ImageModel.DALL_E_3.getValue())
+                .withHeight(1024)
+                .withWidth(1024)
+                .build();
+
+        ImagePrompt imagePrompt = new ImagePrompt(message, options);
+        ImageResponse response = imageModel.call(imagePrompt);
+        return response.getResult().getOutput().getUrl();
+    }
+
 
     @GetMapping("/anthropic")
     public ResponseEntity<String> questionAnthropic(
