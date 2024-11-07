@@ -2,9 +2,10 @@ package org.example.config;
 
 import jakarta.annotation.PostConstruct;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.example.service.HaNetworkCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,11 +19,13 @@ import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 
+import java.util.List;
+
 @Configuration
 public class HaConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(HaConfig.class);
-    private final HaNetworkCache haNetworkCache;
+    private final VectorStore vectorStore;
     @Value("${mqtt.server.uri}")
     private String serverUri;
     @Value("${mqtt.client-id}")
@@ -36,8 +39,10 @@ public class HaConfig {
     @Value("${mqtt.topics}")
     private String topics;
 
-    public HaConfig(HaNetworkCache haNetworkCache) {
-        this.haNetworkCache = haNetworkCache;
+    public HaConfig(
+            VectorStore vectorStore
+    ) {
+        this.vectorStore = vectorStore;
     }
 
     public String[] getTopics() {
@@ -85,8 +90,8 @@ public class HaConfig {
         return message -> {
             String topic = message.getHeaders().get("mqtt_receivedTopic").toString();
             String payload = message.getPayload().toString();
-            logger.info("Received message from topic {}: {}", topic, payload);
-            haNetworkCache.updateState(topic, payload);
+            Document doc =new Document(topic+":"+payload);
+            vectorStore.add(List.of(doc));
         };
     }
 

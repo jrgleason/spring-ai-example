@@ -34,3 +34,4 @@ spring-ai-personal-k8s.yml
 application-personal.yml
 
 build
+node_modules

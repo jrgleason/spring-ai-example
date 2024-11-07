@@ -1,7 +1,38 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: spring-ai
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-atlas-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/data/mongo
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-atlas-pvc
+  namespace: spring-ai
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mongodb-deployment
+  namespace: spring-ai
   labels:
     app: mongodb
 spec:
@@ -24,11 +55,19 @@ spec:
               value: "admin"
             - name: MONGODB_INITDB_ROOT_PASSWORD
               value: "password"
+          volumeMounts:
+            - name: mongo-storage
+              mountPath: /data/db
+      volumes:
+        - name: mongo-storage
+          persistentVolumeClaim:
+            claimName: mongo-atlas-pvc
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis
+  namespace: spring-ai
 spec:
   replicas: 1
   selector:
@@ -41,7 +80,7 @@ spec:
     spec:
       containers:
         - name: redis
-          image: redis:6.2-alpine
+          image: redis/redis-stack:latest
           ports:
             - containerPort: 6379
           resources:
@@ -56,6 +95,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: redis
+  namespace: spring-ai
 spec:
   type: NodePort
   selector:
@@ -69,6 +109,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mongodb-service
+  namespace: spring-ai
 spec:
   type: NodePort
   selector:
