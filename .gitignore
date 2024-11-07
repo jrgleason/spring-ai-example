@@ -32,3 +32,5 @@ replay_pid*
 # To avoid checking in personal data
 spring-ai-personal-k8s.yml
 application-personal.yml
+
+build
