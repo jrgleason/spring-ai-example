@@ -36,3 +36,4 @@ application-personal.yml
 build
 node_modules
 dist
+app/src/main/resources/static/assets/index-*
