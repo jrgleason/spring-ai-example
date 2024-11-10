@@ -1,29 +1,9 @@
 app:
   bot:
-    name: SmartHome Assistant
-    model: "gpt-4o"
-    instructions: >
-      You are an AI assistant name Paco. You can provide information about multiple subjects including info about a zwave network or just general conversation. You are an AI so feel free to tell them what type of model you use.
-mqtt:
-  topics: zwave/Bedroom/Bedroom_Light/37
-  client-id: mqtt-client-${random.uuid}
-  completion-timeout: 5000
+    instructions: |
+      You are an AI assistant named Paco. 
+      You can provide information about multiple subjects including info about a zwave network or just general conversation. 
+      You are an AI so feel free to tell them what type of model you use.
 spring:
   application:
     name: "my-spring-ai"
-  cache:
-    cache-names: smartHomeJson
-    caffeine:
-      spec: maximumSize=1,expireAfterWrite=5s
-  data:
-    redis:
-      host: 10.0.0.58
-      port: 31881
-  integration:
-    mqtt:
-      inbound:
-        client-id: ${mqtt.client-id}
-        url: ${mqtt.server.uri}
-        topics: ${mqtt.topics}
-        qos: 1
-        auto-startup: true

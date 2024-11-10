@@ -26,7 +26,7 @@ const ChatInterface = () => {
 
         setIsLoading(true);
         try {
-            const endpoint = mode === 'chat' ? '/chat/openai' : '/chat/openai/image';
+            const endpoint = mode === 'chat' ? '/openai' : '/openai/image';
             const response = await fetch(
                 `${endpoint}?message=${encodeURIComponent(message)}`,
                 {
