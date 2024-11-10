@@ -1,7 +1,7 @@
 import React from 'react';
-import { Sparkles, ImageIcon, Bot } from 'lucide-react';
+import {Bot, ImageIcon, Sparkles} from 'lucide-react';
 
-export const MessageBubble = ({ message }) => {
+export const MessageBubble = ({message}) => {
     const isUser = message.type === 'user';
     const isError = message.type === 'error';
     const isImage = message.mode === 'openai-image' && message.type === 'ai';
@@ -30,11 +30,11 @@ export const MessageBubble = ({ message }) => {
     const getAIIcon = (mode) => {
         switch (mode) {
             case 'openai-chat':
-                return <Sparkles size={12} className="inline" />;
+                return <Sparkles size={12} className="inline"/>;
             case 'openai-image':
-                return <ImageIcon size={12} className="inline" />;
+                return <ImageIcon size={12} className="inline"/>;
             case 'anthropic':
-                return <Bot size={12} className="inline" />;
+                return <Bot size={12} className="inline"/>;
             default:
                 return null;
         }

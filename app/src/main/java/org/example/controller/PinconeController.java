@@ -18,6 +18,7 @@ public class PinconeController {
     public PinconeController(VectorStore vectorStore) {
         this.vectorStore = vectorStore;
     }
+
     @PostMapping("add")
     public ResponseEntity<Void> addDocument(@RequestBody Map<String, Object> payload) {
         String content = payload.toString();
@@ -25,6 +26,7 @@ public class PinconeController {
         vectorStore.add(List.of(doc));
         return ResponseEntity.ok().build();
     }
+
     @GetMapping("/search")
     public List<Map<String, Object>> searchDocuments() {
 

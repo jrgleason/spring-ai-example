@@ -19,13 +19,13 @@ import org.springframework.context.annotation.Scope;
 @Configuration
 public class SpringAIConfig {
 
+    // TODO: This should be an Ordinal or at least a static in the Spring AI framework. I might be missing something
+    private static final String EMBEDDING_MODEL = "text-embedding-3-large";
     /**
      * Needed for the Image API there should be a way to accept the default #TODO
      */
     @Value("${spring.ai.openai.api-key}")
     private String openAiKey;
-    // TODO: This should be an Ordinal or at least a static in the Spring AI framework. I might be missing something
-    private static final String EMBEDDING_MODEL = "text-embedding-3-large";
 
     @Bean
     @Scope("prototype")

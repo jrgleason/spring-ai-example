@@ -1,8 +1,8 @@
 import React from 'react';
-import { Sparkles, ImageIcon, Bot } from 'lucide-react';
-import { ToggleButton } from './ToggleButton';
+import {Bot, ImageIcon, Sparkles} from 'lucide-react';
+import {ToggleButton} from './ToggleButton';
 
-export const ModeToggle = ({ mode, setMode }) => (
+export const ModeToggle = ({mode, setMode}) => (
     <div className="flex justify-center gap-4 mb-4">
         <ToggleButton
             isActive={mode === 'openai-chat'}

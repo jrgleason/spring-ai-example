@@ -1,6 +1,5 @@
 import React from 'react';
 import ChatInterface from './components/ChatInterface.jsx';
-import ChatInterfaceOld from "./ChatInterfaceOld.jsx";
 
 function App() {
     console.log("Starting");
@@ -10,7 +9,7 @@ function App() {
                 <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
                     Chat Interface
                 </h1>
-                <ChatInterface />
+                <ChatInterface/>
             </div>
         </div>
     );

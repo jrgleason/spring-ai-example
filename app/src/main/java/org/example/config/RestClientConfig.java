@@ -14,6 +14,7 @@ public class RestClientConfig {
 
     /**
      * RestClient needs configured to allow for longer image requests.
+     *
      * @return
      */
     @Bean

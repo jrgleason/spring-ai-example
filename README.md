@@ -11,6 +11,7 @@ For the UI make sure you have Node installed.
 ### Using Gradle
 
 * Create an application-personal.yml with the following information
+
 ```yaml
 spring:
   ai:
@@ -19,6 +20,7 @@ spring:
         environment: <your environment>
         projectId: <your project id>
 ```
+
 * `export SPRING_PROFILES_ACTIVE=local,personal`
 * `gradle bootRun`
 * Open a browser to `http://localhost:8055/`

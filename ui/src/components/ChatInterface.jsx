@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { LoadingSpinner } from './LoadingSpinner';
-import { MessageBubble } from './MessageBubble';
-import { ChatInput } from './ChatInput';
-import { ModeToggle } from './ModeToggle';
-import { useChat } from '../hooks/useChat';
+import React, {useState} from 'react';
+import {LoadingSpinner} from './LoadingSpinner';
+import {MessageBubble} from './MessageBubble';
+import {ChatInput} from './ChatInput';
+import {ModeToggle} from './ModeToggle';
+import {useChat} from '../hooks/useChat';
 
 const ChatInterface = () => {
     const [message, setMessage] = useState('');
     const [mode, setMode] = useState('openai-chat');
-    const { messages, isLoading, sendMessage } = useChat();
+    const {messages, isLoading, sendMessage} = useChat();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -20,7 +20,7 @@ const ChatInterface = () => {
 
     return (
         <div className="max-w-2xl mx-auto p-4 space-y-4">
-            <ModeToggle mode={mode} setMode={setMode} />
+            <ModeToggle mode={mode} setMode={setMode}/>
 
             <div className="rounded-lg bg-white p-4 shadow-md h-[600px] flex flex-col">
                 <div className="flex-1 overflow-y-auto space-y-2 mb-4">
@@ -33,9 +33,9 @@ const ChatInterface = () => {
                     ) : (
                         <>
                             {messages.map((msg, index) => (
-                                <MessageBubble key={index} message={msg} />
+                                <MessageBubble key={index} message={msg}/>
                             ))}
-                            {isLoading && <LoadingSpinner />}
+                            {isLoading && <LoadingSpinner/>}
                         </>
                     )}
                 </div>

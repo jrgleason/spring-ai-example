@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import {useState} from 'react';
 
 export const useChat = () => {
     const [messages, setMessages] = useState([]);
@@ -20,7 +20,7 @@ export const useChat = () => {
     const sendMessage = async (message, mode) => {
         if (!message.trim()) return;
 
-        const userMessage = { type: 'user', content: message, timestamp: new Date(), mode };
+        const userMessage = {type: 'user', content: message, timestamp: new Date(), mode};
         setMessages(msgs => [...msgs, userMessage]);
 
         setIsLoading(true);

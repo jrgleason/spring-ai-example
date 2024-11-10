@@ -22,6 +22,7 @@ public class OpenAIController {
         this.chatClient = chatClient;
         this.imageModel = imageModel;
     }
+
     @GetMapping
     public ResponseEntity<String> question(
             @RequestParam(
