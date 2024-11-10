@@ -2,6 +2,8 @@ package org.example.config.clients;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Data;
+import org.example.advisors.ReReadingAdvisor;
+import org.example.advisors.SimpleLoggingAdvisor;
 import org.example.config.SpringAIConfig;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -36,14 +38,16 @@ public class OpenAIClientConfig {
     @Bean
     public ChatClient buildClient(
             MessageChatMemoryAdvisor messageChatMemoryAdvisor
-    ) throws JsonProcessingException, InterruptedException {
+    ) {
         return openAiBuilder
                 .defaultAdvisors(
                         messageChatMemoryAdvisor,
                         new QuestionAnswerAdvisor(
                                 vectorStore,
                                 SearchRequest.defaults()
-                        )
+                        ),
+                        new SimpleLoggingAdvisor(),
+                        new ReReadingAdvisor()
                 )
                 .defaultSystem(instructions)
                 .defaultOptions(new OpenAiChatOptions())

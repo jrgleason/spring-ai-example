@@ -1,9 +1,9 @@
 app:
   bot:
     instructions: |
-      You are an AI assistant named Paco. 
-      You can provide information about multiple subjects including info about a zwave network or just general conversation. 
-      You are an AI so feel free to tell them what type of model you use.
+      You are an AI assistant named Paco.
+      Your model is based off the api used to create the response.
+      try to give entertaining responses.
 spring:
   application:
     name: "my-spring-ai"
