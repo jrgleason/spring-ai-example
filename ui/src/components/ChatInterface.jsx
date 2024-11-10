@@ -4,10 +4,14 @@ import {MessageBubble} from './MessageBubble';
 import {ChatInput} from './ChatInput';
 import {ModeToggle} from './ModeToggle';
 import {useChat} from '../hooks/useChat';
+import {AddDocumentModal} from "./AddDocumentModal.jsx";
+import {Plus} from "lucide-react";
+import {DocumentGrid} from "./DocumentGrid.jsx";
 
 const ChatInterface = () => {
     const [message, setMessage] = useState('');
     const [mode, setMode] = useState('openai-chat');
+    const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false);
     const {messages, isLoading, sendMessage} = useChat();
 
     const handleSubmit = async (e) => {
@@ -20,7 +24,16 @@ const ChatInterface = () => {
 
     return (
         <div className="max-w-2xl mx-auto p-4 space-y-4">
-            <ModeToggle mode={mode} setMode={setMode}/>
+            <div className="flex justify-between items-center">
+                <ModeToggle mode={mode} setMode={setMode}/>
+                <button
+                    onClick={() => setIsAddDocumentOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                >
+                    <Plus size={16}/>
+                    Add Document
+                </button>
+            </div>
 
             <div className="rounded-lg bg-white p-4 shadow-md h-[600px] flex flex-col">
                 <div className="flex-1 overflow-y-auto space-y-2 mb-4">
@@ -48,6 +61,13 @@ const ChatInterface = () => {
                     mode={mode}
                 />
             </div>
+
+            <DocumentGrid />
+
+            <AddDocumentModal
+                isOpen={isAddDocumentOpen}
+                onClose={() => setIsAddDocumentOpen(false)}
+            />
         </div>
     );
 };

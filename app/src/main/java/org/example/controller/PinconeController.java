@@ -27,7 +27,7 @@ public class PinconeController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/search")
+    @GetMapping("search")
     public List<Map<String, Object>> searchDocuments() {
 
         // Retrieve documents similar to a query

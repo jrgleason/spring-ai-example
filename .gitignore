@@ -36,5 +36,6 @@ application-personal.yml
 build
 node_modules
 dist
-app/src/main/resources/static/assets/index-*
-app/src/main/resources/static/assets/index.html
+app/src/main/resources/static/assets/*
+app/src/main/resources/static/index.html 
+app/src/main/resources/static/fav*
