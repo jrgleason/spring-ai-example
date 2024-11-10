@@ -37,3 +37,4 @@ build
 node_modules
 dist
 app/src/main/resources/static/assets/index-*
+app/src/main/resources/static/assets/index.html
