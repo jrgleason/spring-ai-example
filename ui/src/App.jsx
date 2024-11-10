@@ -1,7 +1,9 @@
 import React from 'react';
-import ChatInterface from './ChatInterface';
+import ChatInterface from './components/ChatInterface.jsx';
+import ChatInterfaceOld from "./ChatInterfaceOld.jsx";
 
 function App() {
+    console.log("Starting");
     return (
         <div className="min-h-screen bg-gray-100 py-8">
             <div className="container mx-auto">

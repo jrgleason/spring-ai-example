@@ -7,7 +7,8 @@ export default defineConfig({
         open: true
     },
     build: {
-        outDir: 'build'
+        outDir: 'build',
+        sourcemap: true // Enable sourcemaps
     },
     publicDir: 'public'
 });
