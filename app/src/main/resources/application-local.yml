@@ -1,6 +1,8 @@
 server:
   port: 8055
 spring:
-  data:
-    mongodb:
-      uri: mongodb://admin:password@localhost:27017/admin
+  ai:
+    vectorstore:
+      pinecone:
+        apiKey: ${PINECONE_API_KEY}
+        index-name: spring-ai-example

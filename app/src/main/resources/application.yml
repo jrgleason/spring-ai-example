@@ -1,21 +1,9 @@
 app:
   bot:
-    name: "Simple Bot"
-    model: "gpt-4o"
-    instructions: "You are a very picky teacher trying to help a taxing student"
+    instructions: |
+      You are an AI assistant named Paco. 
+      You can provide information about multiple subjects including info about a zwave network or just general conversation. 
+      You are an AI so feel free to tell them what type of model you use.
 spring:
-  data:
-    mongodb:
-      database: wiki
-  ai:
-    vectorstore:
-      mongodb:
-        collection-name: vector_store
-        initialize-schema: true
-        path-name: embedding
-        indexName: vector_index
-    openai:
-      api-key: ${OPENAI_API_KEY}
-      chat:
-        options:
-          model: gpt-4o
+  application:
+    name: "my-spring-ai"

@@ -10,8 +10,15 @@ plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'java'
     id 'org.springframework.boot' version '3.3.4'
+    id "io.spring.dependency-management" version '1.1.6'
+    id 'idea'
 }
-apply plugin: 'io.spring.dependency-management'
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -21,6 +28,9 @@ repositories {
     }
 }
 
+group = 'org.cbusha'
+version = '0.0.1-SNAPSHOT'
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-logging'
@@ -28,9 +38,20 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter:1.0.0-M3'
-    implementation 'org.springframework.ai:spring-ai-mongodb-atlas-store-spring-boot-starter:1.0.0-M3'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+
+    implementation 'org.springframework.boot:spring-boot-starter-integration'
+    implementation 'org.springframework.integration:spring-integration-mqtt:6.3.4'
+
+    implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter:1.0.0-M3'
+    implementation 'org.springframework.ai:spring-ai-anthropic-spring-boot-starter:1.0.0-M3'
+//    implementation 'org.springframework.ai:spring-ai-mongodb-atlas-store-spring-boot-starter:1.0.0-M3'
+    implementation 'org.springframework.ai:spring-ai-pinecone-store-spring-boot-starter:1.0.0-M3'
+
+    implementation 'com.github.ben-manes.caffeine:caffeine'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
@@ -63,3 +84,38 @@ bootRun {
 //            "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
     ]
 }
+
+def uiProjectDir = file("../ui")
+def uiDistDir = file("../ui/dist")
+
+// Task to run npm install
+tasks.register('npmInstall', Exec) {
+    workingDir uiProjectDir
+    inputs.file("${uiProjectDir}/package.json")
+    outputs.dir("${uiProjectDir}/node_modules")
+
+    // Use bash directly when in WSL
+    commandLine 'bash', '-c', 'npm install'
+}
+
+// Task to build the UI
+tasks.register('buildUi', Exec) {
+    workingDir uiProjectDir
+    inputs.dir("${uiProjectDir}/src")
+    inputs.dir("${uiProjectDir}/node_modules")
+    outputs.dir(uiDistDir)
+    dependsOn npmInstall
+
+    // Use bash directly when in WSL
+    commandLine 'bash', '-c', 'npm run build'
+}
+
+// Task to copy UI build artifacts to resources
+tasks.register('copyUiBuild', Copy) {
+    dependsOn buildUi
+    from uiDistDir
+    into "src/main/resources/static"
+}
+
+// Make sure the UI is built and copied before processing resources
+processResources.dependsOn copyUiBuild
