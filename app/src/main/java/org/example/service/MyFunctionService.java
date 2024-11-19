@@ -12,7 +12,6 @@ public class MyFunctionService implements Function<MyFunctionService.Request, My
     public record Response(double temp, Unit unit) {}
 
     public Response apply(Request request) {
-        logger.warn("Hitting the function");
         return new Response(30.0, Unit.C);
     }
 }
