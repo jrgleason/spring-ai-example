@@ -7,3 +7,8 @@ app:
 spring:
   application:
     name: "my-spring-ai"
+  ai:
+    vectorstore:
+      pinecone:
+        apiKey: ${PINECONE_API_KEY}
+        index-name: personal-site

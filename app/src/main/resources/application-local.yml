@@ -1,8 +1,0 @@
-server:
-  port: 8055
-spring:
-  ai:
-    vectorstore:
-      pinecone:
-        apiKey: ${PINECONE_API_KEY}
-        index-name: spring-ai-example

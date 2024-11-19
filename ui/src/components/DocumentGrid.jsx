@@ -1,6 +1,6 @@
 // components/DocumentGrid.jsx
-import React, { useState, useEffect } from 'react';
-import { RefreshCw } from 'lucide-react';
+import React, {useEffect, useState} from 'react';
+import {RefreshCw} from 'lucide-react';
 
 export const DocumentGrid = () => {
     const [documents, setDocuments] = useState([]);
@@ -35,7 +35,7 @@ export const DocumentGrid = () => {
                     className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md"
                     disabled={isLoading}
                 >
-                    <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+                    <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''}/>
                     Refresh
                 </button>
             </div>

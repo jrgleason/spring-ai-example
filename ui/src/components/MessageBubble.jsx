@@ -1,7 +1,8 @@
 import React from 'react';
 import {Bot, ImageIcon, Sparkles} from 'lucide-react';
+import AudioController from './AudioController';
 
-export const MessageBubble = ({message}) => {
+export const MessageBubble = ({message, audio}) => {
     const isUser = message.type === 'user';
     const isError = message.type === 'error';
     const isImage = message.mode === 'openai-image' && message.type === 'ai';
@@ -57,6 +58,7 @@ export const MessageBubble = ({message}) => {
                         {getAILabel(message.mode)}
                     </div>
                 )}
+
                 {isImage && message.type === 'ai' ? (
                     <img
                         src={isBase64(message.content)
@@ -74,10 +76,19 @@ export const MessageBubble = ({message}) => {
                 ) : (
                     <div className="whitespace-pre-wrap">{message.content}</div>
                 )}
-                <div className={`text-xs mt-1 ${
-                    isUser ? 'text-blue-100' : 'text-gray-500'
-                }`}>
-                    {message.timestamp.toLocaleTimeString()}
+
+                <div className="flex flex-col gap-2">
+                    {!isUser && message.hasAudio && audio && (
+                        <div className="mt-2 mb-1">
+                            <AudioController audio={audio}/>
+                        </div>
+                    )}
+
+                    <div className={`text-xs ${
+                        isUser ? 'text-blue-100' : 'text-gray-500'
+                    }`}>
+                        {message.timestamp.toLocaleTimeString()}
+                    </div>
                 </div>
             </div>
         </div>

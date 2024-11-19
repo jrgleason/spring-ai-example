@@ -1,9 +1,9 @@
 // components/AddDocumentModal.jsx
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import React, {useState} from 'react';
+import {X} from 'lucide-react';
 import Editor from "@monaco-editor/react";
 
-export const AddDocumentModal = ({ isOpen, onClose }) => {
+export const AddDocumentModal = ({isOpen, onClose}) => {
     const [content, setContent] = useState('{\n  \n}');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
@@ -34,7 +34,7 @@ export const AddDocumentModal = ({ isOpen, onClose }) => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ content }),
+                body: JSON.stringify({content}),
             });
 
             if (!response.ok) {
@@ -80,7 +80,7 @@ export const AddDocumentModal = ({ isOpen, onClose }) => {
                             onClick={onClose}
                             className="text-gray-500 hover:text-gray-700"
                         >
-                            <X size={24} />
+                            <X size={24}/>
                         </button>
                     </div>
                 </div>
@@ -95,7 +95,7 @@ export const AddDocumentModal = ({ isOpen, onClose }) => {
                                 onChange={handleEditorChange}
                                 theme="vs-light"
                                 options={{
-                                    minimap: { enabled: false },
+                                    minimap: {enabled: false},
                                     fontSize: 14,
                                     formatOnPaste: true,
                                     formatOnType: true,

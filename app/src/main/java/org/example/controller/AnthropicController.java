@@ -14,7 +14,7 @@ public class AnthropicController {
     private final ChatClient chatClient;
 
     public AnthropicController(
-            @Qualifier("buildAnthropicClient") ChatClient chatClient) {
+            @Qualifier("anthropicBuildClient") ChatClient chatClient) {
         this.chatClient = chatClient;
     }
 
