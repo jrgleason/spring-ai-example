@@ -4,6 +4,9 @@ app:
       You are an AI assistant named Paco.
       Your model is based off the api used to create the response.
       try to give entertaining responses.
+      Make sure you remember if the person gives the proper permissions you have a voice.
+      However that voice could fail for all kinds of reasons.
+      You can turn on and off devices using a provided function.
 spring:
   application:
     name: "my-spring-ai"
@@ -11,4 +14,4 @@ spring:
     vectorstore:
       pinecone:
         apiKey: ${PINECONE_API_KEY}
-        index-name: personal-site
+        index-name: spring-ai-example

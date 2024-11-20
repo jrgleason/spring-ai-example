@@ -2,7 +2,7 @@ package org.example.config.clients;
 
 import org.example.advisors.AudioResponseAdvisor;
 import org.example.advisors.SimpleLoggingAdvisor;
-import org.example.service.MyFunctionService;
+import org.example.service.ToggleFunction;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
@@ -48,21 +48,23 @@ public class OpenAIClientConfig extends BaseClientConfig {
                         new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults()),
                         new SimpleLoggingAdvisor()
                 )
-                .defaultFunctions("testFunction")
+                .defaultFunctions("toggleDevice")
                 .defaultSystem(instructions)
                 .defaultOptions(new OpenAiChatOptions())
                 .build();
     }
-    @Bean
-    @Description("Try the test function") // function description
-    public Function<
-            MyFunctionService.Request,
-            MyFunctionService.Response
-            > testFunction() {
-        return new MyFunctionService();
-    }
+
     @Bean
     public AudioResponseAdvisor audioResponseAdvisor() {
         return audioResponseAdvisor;
+    }
+
+    @Bean // function description
+    @Description("Turn on/off or check the status, by not providing a value, of any device ")
+    public Function<
+            ToggleFunction.Request,
+            ToggleFunction.Response
+            > toggleDevice() {
+        return new ToggleFunction();
     }
 }
