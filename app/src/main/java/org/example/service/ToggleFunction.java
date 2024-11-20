@@ -12,9 +12,6 @@ public class ToggleFunction implements Function<ToggleFunction.Request, ToggleFu
 
     private final Map<String, Boolean> deviceStates = new HashMap<>();
 
-    public record Request(Boolean value, String device) {}
-    public record Response(boolean state) {}
-
     public Response apply(Request request) {
         String device = request.device();
         Boolean value = request.value();
@@ -28,5 +25,11 @@ public class ToggleFunction implements Function<ToggleFunction.Request, ToggleFu
         }
 
         return new Response(deviceStates.getOrDefault(device, false));
+    }
+
+    public record Request(Boolean value, String device) {
+    }
+
+    public record Response(boolean state) {
     }
 }

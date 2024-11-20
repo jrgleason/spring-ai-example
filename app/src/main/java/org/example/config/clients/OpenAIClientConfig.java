@@ -1,13 +1,11 @@
 package org.example.config.clients;
 
-import org.example.advisors.AudioResponseAdvisor;
 import org.example.advisors.SimpleLoggingAdvisor;
 import org.example.service.ToggleFunction;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
 import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.openai.audio.speech.SpeechModel;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -22,16 +20,13 @@ public class OpenAIClientConfig extends BaseClientConfig {
 
     private final ChatClient.Builder openAiBuilder;
     private final VectorStore vectorStore;
-    private final AudioResponseAdvisor audioResponseAdvisor;
 
     public OpenAIClientConfig(
             @Qualifier("openAiChatClientBuilder") ChatClient.Builder openAiBuilder,
-            VectorStore vectorStore,
-            SpeechModel speechModel
+            VectorStore vectorStore
     ) {
         this.openAiBuilder = openAiBuilder;
         this.vectorStore = vectorStore;
-        this.audioResponseAdvisor = new AudioResponseAdvisor(speechModel);
     }
 
     @Override
@@ -52,11 +47,6 @@ public class OpenAIClientConfig extends BaseClientConfig {
                 .defaultSystem(instructions)
                 .defaultOptions(new OpenAiChatOptions())
                 .build();
-    }
-
-    @Bean
-    public AudioResponseAdvisor audioResponseAdvisor() {
-        return audioResponseAdvisor;
     }
 
     @Bean // function description
