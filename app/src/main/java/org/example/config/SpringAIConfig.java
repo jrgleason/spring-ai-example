@@ -23,21 +23,21 @@ public class SpringAIConfig {
     @Bean
     @Scope("prototype")
     ChatClient.Builder openAiChatClientBuilder(
-            ChatClientBuilderConfigurer chatClientBuilderConfigurer,
-            @Qualifier("openAiChatModel") ChatModel chatModel
-    ) {
-        ChatClient.Builder builder = ChatClient.builder(chatModel);
-        return chatClientBuilderConfigurer.configure(builder);
+            ChatClientBuilderConfigurer configurer,
+            @Qualifier("openAiChatModel") ChatModel chatModel) {
+        return configurer.configure(
+                ChatClient.builder(chatModel)
+        );
     }
 
     @Bean
     @Scope("prototype")
     ChatClient.Builder anthropicChatClientBuilder(
-            ChatClientBuilderConfigurer chatClientBuilderConfigurer,
-            @Qualifier("anthropicChatModel") ChatModel chatModel
-    ) {
-        ChatClient.Builder builder = ChatClient.builder(chatModel);
-        return chatClientBuilderConfigurer.configure(builder);
+            ChatClientBuilderConfigurer configurer,
+            @Qualifier("anthropicChatModel") ChatModel chatModel) {
+        return configurer.configure(
+                ChatClient.builder(chatModel)
+        );
     }
 
     @Bean

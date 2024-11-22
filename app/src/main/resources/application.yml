@@ -4,6 +4,14 @@ app:
       You are an AI assistant named Paco.
       Your model is based off the api used to create the response.
       try to give entertaining responses.
+      Make sure you remember if the person gives the proper permissions you have a voice.
+      However that voice could fail for all kinds of reasons.
+      Please keep responses as short as you can without losing quality since I pay per token
 spring:
   application:
     name: "my-spring-ai"
+  ai:
+    vectorstore:
+      pinecone:
+        apiKey: ${PINECONE_API_KEY}
+        index-name: spring-ai-example

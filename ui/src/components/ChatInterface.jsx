@@ -12,7 +12,7 @@ const ChatInterface = () => {
     const [message, setMessage] = useState('');
     const [mode, setMode] = useState('openai-chat');
     const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false);
-    const {messages, isLoading, sendMessage} = useChat();
+    const {messages, isLoading, sendMessage, audioElements} = useChat();  // Added audioElements
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -21,6 +21,19 @@ const ChatInterface = () => {
             setMessage('');
         }
     };
+
+    // Helper function to automatically scroll to bottom
+    const scrollToBottom = (behavior = 'smooth') => {
+        window.scrollTo({
+            top: document.documentElement.scrollHeight,
+            behavior
+        });
+    };
+
+    // Scroll to bottom whenever messages change
+    React.useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
 
     return (
         <div className="max-w-2xl mx-auto p-4 space-y-4">
@@ -36,7 +49,7 @@ const ChatInterface = () => {
             </div>
 
             <div className="rounded-lg bg-white p-4 shadow-md h-[600px] flex flex-col">
-                <div className="flex-1 overflow-y-auto space-y-2 mb-4">
+                <div className="flex-1 overflow-y-auto space-y-2 mb-4 scroll-smooth">
                     {messages.length === 0 ? (
                         <div className="text-gray-400 italic text-center mt-4">
                             {mode === 'openai-image'
@@ -44,12 +57,20 @@ const ChatInterface = () => {
                                 : 'Start a conversation...'}
                         </div>
                     ) : (
-                        <>
+                        <div className="space-y-4">
                             {messages.map((msg, index) => (
-                                <MessageBubble key={index} message={msg}/>
+                                <MessageBubble
+                                    key={index}
+                                    message={msg}
+                                    audio={msg.hasAudio ? audioElements[msg.messageId] : null}
+                                />
                             ))}
-                            {isLoading && <LoadingSpinner/>}
-                        </>
+                            {isLoading && (
+                                <div className="flex justify-center">
+                                    <LoadingSpinner/>
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
 
@@ -62,7 +83,7 @@ const ChatInterface = () => {
                 />
             </div>
 
-            <DocumentGrid />
+            <DocumentGrid/>
 
             <AddDocumentModal
                 isOpen={isAddDocumentOpen}

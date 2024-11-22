@@ -39,3 +39,4 @@ dist
 app/src/main/resources/static/assets/*
 app/src/main/resources/static/index.html 
 app/src/main/resources/static/fav*
+.idea
