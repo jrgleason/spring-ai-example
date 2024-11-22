@@ -1,6 +1,7 @@
 package org.example.config.clients;
 
 import org.example.advisors.SimpleLoggingAdvisor;
+import org.example.service.DeviceStateService;
 import org.example.service.ToggleFunction;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -20,11 +21,14 @@ public class OpenAIClientConfig extends BaseClientConfig {
 
     private final ChatClient.Builder openAiBuilder;
     private final VectorStore vectorStore;
+    private final DeviceStateService deviceStateService;
 
     public OpenAIClientConfig(
+            DeviceStateService deviceStateService,
             @Qualifier("openAiChatClientBuilder") ChatClient.Builder openAiBuilder,
             VectorStore vectorStore
     ) {
+        this.deviceStateService = deviceStateService;
         this.openAiBuilder = openAiBuilder;
         this.vectorStore = vectorStore;
     }
@@ -55,6 +59,6 @@ public class OpenAIClientConfig extends BaseClientConfig {
             ToggleFunction.Request,
             ToggleFunction.Response
             > toggleDevice() {
-        return new ToggleFunction();
+        return new ToggleFunction(deviceStateService);
     }
 }

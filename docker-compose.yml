@@ -1,0 +1,10 @@
+services:
+  jrg-ui:
+    image: 10.0.0.58:30500/spring-ai-example:latest
+    ports:
+      - "8020:8055"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - SPRING_AI_OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - SPRING_AI_ANTHROPIC_API_KEY=${ANTHROPIC_KEY}

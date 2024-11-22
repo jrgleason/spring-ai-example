@@ -8,7 +8,7 @@ export default defineConfig({
     },
     build: {
         outDir: 'build',
-        sourcemap: true // Enable sourcemaps
+        sourcemap: true,
     },
     publicDir: 'public'
 });
