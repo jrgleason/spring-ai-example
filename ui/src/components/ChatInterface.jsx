@@ -20,7 +20,7 @@ const ChatInterface = () => {
     const { state, send } = useStateContext();
     const [message, setMessage] = useState('');
     const [mode, setMode] = useState('openai-chat');
-    const [isStreaming, setIsStreaming] = useState(true);
+    const [isStreaming, setIsStreaming] = useState(false);
     const { isLoading, sendMessage, streamMessage } = useChat();
 
     const handleSubmit = async (e) => {
