@@ -3,7 +3,6 @@ import {v4 as uuidv4} from 'uuid';
 
 export const useChat = () => {
     const [isLoading, setIsLoading] = useState(false);
-    const [audioElements, setAudioElements] = useState({});
 
     const getEndpoint = (mode) => {
         const endpoints = {
@@ -12,6 +11,23 @@ export const useChat = () => {
             'anthropic': '/anthropic/anthropic'
         };
         return endpoints[mode] || '/openai';
+    };
+
+    const generateAudioForMessage = async (messageId, text, send) => {
+        try {
+            const audioResponse = await fetch(`/openai/audio?message=${encodeURIComponent(text)}`, {
+                method: 'GET'
+            });
+            if (!audioResponse.ok) throw new Error('Audio stream response was not ok');
+
+            await send({
+                type: 'PLAYBACK',
+                audioResponse,
+                responseId: messageId
+            });
+        } catch (error) {
+            console.error('Audio generation error:', error);
+        }
     };
 
     const sendMessage = async (message, mode, send) => {
@@ -29,56 +45,27 @@ export const useChat = () => {
             const responseText = await textResponse.text();
 
             await send({type: 'STREAM', chunk: responseText, responseId: messageId});
-
-            const audioResponse = await fetch(`/openai/audio?message=${encodeURIComponent(responseText)}`, {method: 'GET'});
-            if (!audioResponse.ok) throw new Error('Audio stream response was not ok');
-
-            const mediaSource = new MediaSource();
-            const audio = new Audio();
-            audio.src = URL.createObjectURL(mediaSource);
-
-            mediaSource.addEventListener('sourceopen', async () => {
-                const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
-                const reader = audioResponse.body.getReader();
-                const chunks = [];
-
-                while (true) {
-                    const {done, value} = await reader.read();
-                    if (done) break;
-                    chunks.push(value);
-                }
-
-                for (const chunk of chunks) {
-                    await new Promise((resolve) => {
-                        if (!sourceBuffer.updating) {
-                            sourceBuffer.appendBuffer(chunk);
-                            sourceBuffer.addEventListener('updateend', resolve, {once: true});
-                        } else {
-                            sourceBuffer.addEventListener('updateend', () => {
-                                sourceBuffer.appendBuffer(chunk);
-                                sourceBuffer.addEventListener('updateend', resolve, {once: true});
-                            }, {once: true});
-                        }
-                    });
-                }
-
-                mediaSource.endOfStream();
-            });
-
             await send({type: 'COMPLETE'});
+
+            await generateAudioForMessage(messageId, responseText, send);
             return true;
 
         } catch (error) {
+            console.error('Error:', error);
             await send({type: 'STREAM_ERROR', error: 'Failed to get response', responseId: messageId});
             return false;
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const streamMessage = async (message, send) => {
         if (!message.trim()) return;
 
-        const uuid = uuidv4();
-        await send({type: 'ASK', message, speaker: "user", responder: "ai", responseId: uuid});
+        const messageId = uuidv4();
+        let completeMessage = '';
+
+        await send({type: 'ASK', message, speaker: "user", responder: "ai", responseId: messageId});
 
         try {
             const response = await fetch(`/openai/stream?message=${encodeURIComponent(message)}`, {
@@ -91,17 +78,17 @@ export const useChat = () => {
             while (true) {
                 const {done, value} = await reader.read();
                 if (done) break;
+                const chunk = decoder.decode(value, {stream: true});
+                completeMessage += chunk;
                 await send({
                     type: 'STREAM',
-                    chunk: decoder.decode(
-                        value,
-                        {stream: true}
-                    ), responseId: uuid
+                    chunk,
+                    responseId: messageId
                 });
             }
 
             await send({type: 'COMPLETE'});
-            console.log("Streamed successfully");
+            await generateAudioForMessage(messageId, completeMessage, send);
             return true;
 
         } catch (error) {
@@ -112,5 +99,5 @@ export const useChat = () => {
         }
     };
 
-    return {isLoading, sendMessage, audioElements, streamMessage};
+    return {isLoading, sendMessage, streamMessage};
 };
