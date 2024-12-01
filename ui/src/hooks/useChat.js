@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useChat = () => {
     const [messages, setMessages] = useState([]);
@@ -18,16 +19,22 @@ export const useChat = () => {
         }
     };
 
-    const sendMessage = async (message, mode) => {
+    const sendMessage = async (message, mode, send) => {
         if (!message.trim()) return;
 
-        const messageId = Date.now().toString();
-        const userMessage = {type: 'user', content: message, timestamp: new Date(), mode};
-        setMessages(msgs => [...msgs, userMessage]);
-        setIsLoading(true);
+        const messageId = uuidv4();
+
+        // Send initial message event - this matches the existing state machine
+        await send({
+            type: 'ASK',
+            message,
+            speaker: "user",
+            responder: "ai",
+            responseId: messageId
+        });
 
         try {
-            // First get the text response
+            // Get the text response
             const endpoint = getEndpoint(mode);
             const textResponse = await fetch(
                 `${endpoint}?message=${encodeURIComponent(message)}`,
@@ -41,12 +48,16 @@ export const useChat = () => {
 
             const responseText = await textResponse.text();
 
-            // Create and set up audio element
-            const audio = new Audio();
+            // Use the existing STREAM event to send the full text
+            await send({
+                type: 'STREAM',
+                chunk: responseText,
+                responseId: messageId
+            });
 
-            // Now use that response text for the audio stream
+            // Handle audio stream
             const audioResponse = await fetch(
-                `/openai/stream?message=${encodeURIComponent(responseText)}`,
+                `/openai/audio?message=${encodeURIComponent(responseText)}`,
                 {method: 'GET'}
             );
 
@@ -54,7 +65,9 @@ export const useChat = () => {
                 throw new Error('Audio stream response was not ok');
             }
 
+            // Create MediaSource and set up audio
             const mediaSource = new MediaSource();
+            const audio = new Audio();
             audio.src = URL.createObjectURL(mediaSource);
 
             mediaSource.addEventListener('sourceopen', async () => {
@@ -62,12 +75,14 @@ export const useChat = () => {
                 const reader = audioResponse.body.getReader();
                 const chunks = [];
 
+                // Read all chunks
                 while (true) {
                     const {done, value} = await reader.read();
                     if (done) break;
                     chunks.push(value);
                 }
 
+                // Process chunks
                 for (const chunk of chunks) {
                     await new Promise((resolve) => {
                         if (!sourceBuffer.updating) {
@@ -85,25 +100,78 @@ export const useChat = () => {
                 mediaSource.endOfStream();
             });
 
-            // Store the audio element
-            setAudioElements(prev => ({
-                ...prev,
-                [messageId]: audio
-            }));
-
-            // Add AI message
-            setMessages(msgs => [...msgs, {
-                type: 'ai',
-                content: responseText,
-                timestamp: new Date(),
-                mode,
-                messageId,
-                hasAudio: true
-            }]);
+            // Send completion event - matches existing state machine
+            await send({
+                type: 'COMPLETE'
+            });
 
             return true;
+
         } catch (error) {
-            console.error('Audio Error:', error);
+            console.error('Error:', error);
+
+            // Use existing STREAM_ERROR event
+            await send({
+                type: 'STREAM_ERROR',
+                error: 'Failed to get response',
+                responseId: messageId
+            });
+
+            return false;
+        }
+    };
+
+    const streamMessage = async (message, send) => {
+        if (!message.trim()) return;
+
+        const uuid = uuidv4();
+        await send({
+            type: 'ASK',
+            message,
+            speaker: "user",
+            responder: "ai",
+            responseId: uuid
+        });
+
+        try {
+            // First get the text response
+            const response = await fetch(
+                `/openai/stream?message=${encodeURIComponent(message)}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            (async () => {
+                try {
+                    while (true) {
+                        const {done, value} = await reader.read();
+                        if (done) break;
+                        await send({
+                            type: 'STREAM',
+                            chunk: decoder.decode(value, {stream: true}),
+                            responseId: uuid
+                        });
+                    }
+                } catch (error) {
+                    send({
+                        type: 'STREAM_ERROR',
+                        error: 'Stream interrupted. Please try again.',
+                        responseId: uuid
+                    });
+                }
+            })().then(r =>{
+                send({
+                    type: 'COMPLETE'
+                });
+                console.log("Streamed successfully");
+            });
+            return true;
+        } catch (error) {
             setMessages(msgs => [...msgs, {
                 type: 'error',
                 content: 'Error: Failed to get response',
@@ -120,6 +188,7 @@ export const useChat = () => {
         messages,
         isLoading,
         sendMessage,
-        audioElements
+        audioElements,
+        streamMessage
     };
 };

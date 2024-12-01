@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import reactor.core.publisher.Flux;
 
 @RestController
 @RequestMapping("openai")
@@ -47,7 +48,15 @@ public class OpenAIController {
         return ResponseEntity.ok(responseContent);
     }
 
-    @GetMapping(value = "/stream", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping("/stream")
+    public Flux<String> chatWithStream(@RequestParam String message) {
+        return chatClient.prompt()
+                         .user(message)
+                         .stream()
+                         .content();
+    }
+
+    @GetMapping(value = "/audio", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> streamAudio(
             @RequestParam(value = "message", defaultValue = "Today is a wonderful day!") String message) {
 

@@ -12,17 +12,20 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@emotion/react": "latest",
+    "@emotion/styled": "latest",
     "@monaco-editor/react": "latest",
+    "@mui/material": "latest",
     "@vitejs/plugin-react": "latest",
     "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "uuid": "^11.0.3",
     "vite": "latest",
-    "@mui/material": "latest",
-    "@emotion/react": "latest",
-    "@emotion/styled": "latest"
+    "xstate": "latest"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "latest",
     "autoprefixer": "latest",
     "postcss": "latest",
     "tailwindcss": "latest"

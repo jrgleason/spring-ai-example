@@ -7,19 +7,26 @@ import {useChat} from '../hooks/useChat';
 import {AddDocumentModal} from "./AddDocumentModal.jsx";
 import {Plus} from "lucide-react";
 import {DocumentGrid} from "./DocumentGrid.jsx";
+import {useStateContext} from "../state/StateProvider.jsx";
+import { v4 as uuidv4 } from 'uuid';
 
 const ChatInterface = () => {
+    const {state, send} = useStateContext();
+
     const [message, setMessage] = useState('');
     const [mode, setMode] = useState('openai-chat');
+    const [isStreaming, setIsStreaming] = useState(true);
     const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false);
-    const {messages, isLoading, sendMessage, audioElements} = useChat();  // Added audioElements
+    const {isLoading, sendMessage, audioElements, streamMessage } = useChat();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const success = await sendMessage(message, mode);
-        if (success) {
-            setMessage('');
+        if(isStreaming){
+            await streamMessage(message, send);
+        } else {
+            await sendMessage(message, mode, send);
         }
+        setMessage('');
     };
 
     // Helper function to automatically scroll to bottom
@@ -33,12 +40,38 @@ const ChatInterface = () => {
     // Scroll to bottom whenever messages change
     React.useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [state.context.messages]);
 
     return (
         <div className="max-w-2xl mx-auto p-4 space-y-4">
             <div className="flex justify-between items-center">
-                <ModeToggle mode={mode} setMode={setMode}/>
+                <div className="flex items-center gap-4">
+                    <ModeToggle mode={mode} setMode={setMode}/>
+                    <div className="flex items-center gap-2">
+                        <label className="text-sm text-gray-600">Streaming</label>
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={isStreaming}
+                            onClick={() => setIsStreaming(!isStreaming)}
+                            className={`
+                                relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
+                                transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                                ${isStreaming ? 'bg-blue-600' : 'bg-gray-200'}
+                            `}
+                        >
+                            <span className="sr-only">Use streaming</span>
+                            <span
+                                aria-hidden="true"
+                                className={`
+                                    pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0
+                                    transition duration-200 ease-in-out
+                                    ${isStreaming ? 'translate-x-5' : 'translate-x-0'}
+                                `}
+                            />
+                        </button>
+                    </div>
+                </div>
                 <button
                     onClick={() => setIsAddDocumentOpen(true)}
                     className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
@@ -50,7 +83,7 @@ const ChatInterface = () => {
 
             <div className="rounded-lg bg-white p-4 shadow-md h-[600px] flex flex-col">
                 <div className="flex-1 overflow-y-auto space-y-2 mb-4 scroll-smooth">
-                    {messages.length === 0 ? (
+                    {Object.keys(state.context.messages).length === 0 ? (
                         <div className="text-gray-400 italic text-center mt-4">
                             {mode === 'openai-image'
                                 ? 'Describe an image to generate...'
@@ -58,7 +91,7 @@ const ChatInterface = () => {
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {messages.map((msg, index) => (
+                            {Object.values(state.context.messages).map((msg, index) => (
                                 <MessageBubble
                                     key={index}
                                     message={msg}
