@@ -37,14 +37,14 @@ function App() {
     return (
         <StateProvider>
             <div className="min-h-screen bg-gray-100">
-                <AppBar position="static">
+                <AppBar position="fixed">
                     <Toolbar>
                         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                             Chat Interface
                         </Typography>
                     </Toolbar>
                 </AppBar>
-                <div className="container mx-auto">
+                <div className="container mx-auto" style={{ paddingTop: '64px' }}>
                     <Box sx={{ width: '100%' }}>
                         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                             <Tabs
