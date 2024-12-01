@@ -33,17 +33,6 @@ const ChatInterface = () => {
         setMessage('');
     };
 
-    const scrollToBottom = (behavior = 'smooth') => {
-        window.scrollTo({
-            top: document.documentElement.scrollHeight,
-            behavior
-        });
-    };
-
-    React.useEffect(() => {
-        scrollToBottom();
-    }, [state.context.messages]);
-
     const EmptyState = () => (
         <Box className="text-center mt-4">
             <Typography variant="body2" className="text-gray-400 italic">
@@ -60,7 +49,7 @@ const ChatInterface = () => {
                 {/* Controls Bar */}
                 <Paper className="p-4">
                     <Stack direction="row" spacing={4} alignItems="center">
-                        <ModeToggle mode={mode} setMode={setMode} />
+                        {!isStreaming && <ModeToggle mode={mode} setMode={setMode} />}
                         <FormControlLabel
                             control={
                                 <Switch

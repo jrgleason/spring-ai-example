@@ -18,7 +18,7 @@ public class AnthropicController {
         this.chatClient = chatClient;
     }
 
-    @GetMapping("/anthropic")
+    @GetMapping
     public ResponseEntity<String> questionAnthropic(
             @RequestParam(
                     value = "message",

@@ -51,6 +51,14 @@ export const MessageBubble = ({ message }) => {
 
     const renderContent = () => {
         if (isImage && message.type === 'ai') {
+            if (!message.content) {
+                return (
+                    <div className="flex justify-center w-full">
+                        <LoadingSpinner size="small" />
+                    </div>
+                );
+            }
+
             return (
                 <img
                     src={isBase64(message.content)

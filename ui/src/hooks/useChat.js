@@ -8,7 +8,7 @@ export const useChat = () => {
         const endpoints = {
             'openai-chat': '/openai',
             'openai-image': '/openai/image',
-            'anthropic': '/anthropic/anthropic'
+            'anthropic': '/anthropic'
         };
         return endpoints[mode] || '/openai';
     };
@@ -34,7 +34,14 @@ export const useChat = () => {
         if (!message.trim()) return;
 
         const messageId = uuidv4();
-        await send({type: 'ASK', message, speaker: "user", responder: "ai", responseId: messageId});
+        await send({
+            type: 'ASK',
+            message,
+            speaker: "user",
+            responder: "ai",
+            responseId: messageId,
+            mode
+        });
 
         try {
             const endpoint = getEndpoint(mode);
@@ -88,7 +95,9 @@ export const useChat = () => {
             }
 
             await send({type: 'COMPLETE'});
-            await generateAudioForMessage(messageId, completeMessage, send);
+            if(message.mode !== 'openai-image'){
+                await generateAudioForMessage(messageId, completeMessage, send);
+            }
             return true;
 
         } catch (error) {

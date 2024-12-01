@@ -126,6 +126,7 @@ const askQuestion = fromPromise(async ({input}) => {
             [input.responseId]: {
                 type: input.responder,
                 content: "",
+                mode: input.mode,
                 timestamp: new Date()
             }
         };
@@ -181,7 +182,8 @@ export const simpleMachine = createMachine({
                     message: event.message,
                     responseId: event.responseId,
                     speaker: event.speaker,
-                    responder: event.responder
+                    responder: event.responder,
+                    mode: event.mode
                 }),
                 onDone: {
                     actions: assign(({event, context}) => {
