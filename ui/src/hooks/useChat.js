@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 
 export const useChat = () => {
     const [messages, setMessages] = useState([]);
@@ -164,7 +164,7 @@ export const useChat = () => {
                         responseId: uuid
                     });
                 }
-            })().then(r =>{
+            })().then(r => {
                 send({
                     type: 'COMPLETE'
                 });

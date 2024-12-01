@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, Typography, Button } from '@mui/material';
-import { Alert, AlertTitle } from '@mui/material';
+import React, {useCallback, useEffect, useState} from 'react';
+import {Alert, AlertTitle, Button, Card, CardContent, CardHeader} from '@mui/material';
+
 const DeviceStateComponent = () => {
     const [deviceStates, setDeviceStates] = useState({});
     const [connectionStatus, setConnectionStatus] = useState('disconnected');
@@ -100,7 +100,8 @@ const DeviceStateComponent = () => {
                     {Object.entries(deviceStates).map(([device, state]) => (
                         <div key={device} className="flex items-center justify-between p-2 border rounded">
                             <span className="font-medium">{device}</span>
-                            <span className={`px-2 py-1 rounded ${state ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            <span
+                                className={`px-2 py-1 rounded ${state ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                                 {state ? 'On' : 'Off'}
                             </span>
                         </div>

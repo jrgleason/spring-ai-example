@@ -1,5 +1,5 @@
 import {assign, createMachine, fromPromise} from "xstate";
-import { v4 as uuidv4 } from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 
 const askQuestion = fromPromise(async (
     {
@@ -22,7 +22,7 @@ const askQuestion = fromPromise(async (
     }
 });
 
-const streamRecord = fromPromise(async ({input})=>{
+const streamRecord = fromPromise(async ({input}) => {
     console.log("Streaming record");
 });
 

@@ -4,11 +4,7 @@ import {MessageBubble} from './MessageBubble';
 import {ChatInput} from './ChatInput';
 import {ModeToggle} from './ModeToggle';
 import {useChat} from '../hooks/useChat';
-import {AddDocumentModal} from "./AddDocumentModal.jsx";
-import {Plus} from "lucide-react";
-import {DocumentGrid} from "./DocumentGrid.jsx";
 import {useStateContext} from "../state/StateProvider.jsx";
-import { v4 as uuidv4 } from 'uuid';
 
 const ChatInterface = () => {
     const {state, send} = useStateContext();
@@ -16,12 +12,11 @@ const ChatInterface = () => {
     const [message, setMessage] = useState('');
     const [mode, setMode] = useState('openai-chat');
     const [isStreaming, setIsStreaming] = useState(true);
-    const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false);
-    const {isLoading, sendMessage, audioElements, streamMessage } = useChat();
+    const {isLoading, sendMessage, audioElements, streamMessage} = useChat();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if(isStreaming){
+        if (isStreaming) {
             await streamMessage(message, send);
         } else {
             await sendMessage(message, mode, send);
@@ -72,13 +67,6 @@ const ChatInterface = () => {
                         </button>
                     </div>
                 </div>
-                <button
-                    onClick={() => setIsAddDocumentOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                >
-                    <Plus size={16}/>
-                    Add Document
-                </button>
             </div>
 
             <div className="rounded-lg bg-white p-4 shadow-md h-[600px] flex flex-col">
@@ -115,13 +103,6 @@ const ChatInterface = () => {
                     mode={mode}
                 />
             </div>
-
-            <DocumentGrid/>
-
-            <AddDocumentModal
-                isOpen={isAddDocumentOpen}
-                onClose={() => setIsAddDocumentOpen(false)}
-            />
         </div>
     );
 };
