@@ -44,7 +44,7 @@ function App() {
                         </Typography>
                     </Toolbar>
                 </AppBar>
-                <div className="container mx-auto py-8">
+                <div className="container mx-auto">
                     <Box sx={{ width: '100%' }}>
                         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                             <Tabs
