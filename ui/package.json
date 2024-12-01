@@ -17,10 +17,11 @@
     "@monaco-editor/react": "latest",
     "@mui/material": "latest",
     "@vitejs/plugin-react": "latest",
+    "@xstate/react": "latest",
     "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "uuid": "^11.0.3",
+    "uuid": "latest",
     "vite": "latest",
     "xstate": "latest"
   },
