@@ -13,9 +13,9 @@ public class AuthConfig {
             HttpSecurity http
     ) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests((authz) -> authz
-                        .anyRequest().permitAll()
-                );
+            .authorizeHttpRequests((authz) -> authz
+                    .anyRequest().permitAll()
+            );
         return http.build();
     }
 }

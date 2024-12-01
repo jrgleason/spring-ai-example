@@ -79,6 +79,7 @@ export const simpleMachine = createMachine({
                 STREAM_ERROR: {
                     target: 'idle',
                     actions: assign({
+                        // TODO: Add error message to the responseId
                         errorMessage: ({event}) => {
                             return event.error
                         }

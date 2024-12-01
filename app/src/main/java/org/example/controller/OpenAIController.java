@@ -42,9 +42,9 @@ public class OpenAIController {
             ) String message
     ) {
         String responseContent = chatClient.prompt()
-                .user(message)
-                .call()
-                .content();
+                                           .user(message)
+                                           .call()
+                                           .content();
         return ResponseEntity.ok(responseContent);
     }
 
@@ -68,17 +68,17 @@ public class OpenAIController {
         };
 
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType("audio/mp3"))
-                .body(responseBody);
+                             .contentType(MediaType.parseMediaType("audio/mp3"))
+                             .body(responseBody);
     }
 
     @GetMapping("/image")
     public String generate(@RequestParam(value = "message") String message) {
         ImageOptions options = ImageOptionsBuilder.builder()
-                .withModel(OpenAiImageApi.ImageModel.DALL_E_3.getValue())
-                .withHeight(1024)
-                .withWidth(1024)
-                .build();
+                                                  .withModel(OpenAiImageApi.ImageModel.DALL_E_3.getValue())
+                                                  .withHeight(1024)
+                                                  .withWidth(1024)
+                                                  .build();
 
         ImagePrompt imagePrompt = new ImagePrompt(message, options);
         ImageResponse response = imageModel.call(imagePrompt);
