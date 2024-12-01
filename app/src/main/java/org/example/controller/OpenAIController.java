@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import reactor.core.publisher.Flux;
 
 @RestController
 @RequestMapping("openai")
@@ -41,13 +42,21 @@ public class OpenAIController {
             ) String message
     ) {
         String responseContent = chatClient.prompt()
-                .user(message)
-                .call()
-                .content();
+                                           .user(message)
+                                           .call()
+                                           .content();
         return ResponseEntity.ok(responseContent);
     }
 
-    @GetMapping(value = "/stream", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping("/stream")
+    public Flux<String> chatWithStream(@RequestParam String message) {
+        return chatClient.prompt()
+                         .user(message)
+                         .stream()
+                         .content();
+    }
+
+    @GetMapping(value = "/audio", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> streamAudio(
             @RequestParam(value = "message", defaultValue = "Today is a wonderful day!") String message) {
 
@@ -59,17 +68,17 @@ public class OpenAIController {
         };
 
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType("audio/mp3"))
-                .body(responseBody);
+                             .contentType(MediaType.parseMediaType("audio/mp3"))
+                             .body(responseBody);
     }
 
     @GetMapping("/image")
     public String generate(@RequestParam(value = "message") String message) {
         ImageOptions options = ImageOptionsBuilder.builder()
-                .withModel(OpenAiImageApi.ImageModel.DALL_E_3.getValue())
-                .withHeight(1024)
-                .withWidth(1024)
-                .build();
+                                                  .withModel(OpenAiImageApi.ImageModel.DALL_E_3.getValue())
+                                                  .withHeight(1024)
+                                                  .withWidth(1024)
+                                                  .build();
 
         ImagePrompt imagePrompt = new ImagePrompt(message, options);
         ImageResponse response = imageModel.call(imagePrompt);

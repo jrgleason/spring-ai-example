@@ -1,5 +1,6 @@
 import {defineConfig} from 'vite';
 import react from '@vitejs/plugin-react';
+
 let chunkCounter = 0;
 
 const autoIncrementPlugin = () => {

@@ -1,125 +1,112 @@
 import {useState} from 'react';
+import {v4 as uuidv4} from 'uuid';
 
 export const useChat = () => {
-    const [messages, setMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [audioElements, setAudioElements] = useState({});
 
     const getEndpoint = (mode) => {
-        switch (mode) {
-            case 'openai-chat':
-                return '/openai';
-            case 'openai-image':
-                return '/openai/image';
-            case 'anthropic':
-                return '/anthropic/anthropic';
-            default:
-                return '/openai';
+        const endpoints = {
+            'openai-chat': '/openai',
+            'openai-image': '/openai/image',
+            'anthropic': '/anthropic'
+        };
+        return endpoints[mode] || '/openai';
+    };
+
+    const generateAudioForMessage = async (messageId, text, send) => {
+        try {
+            const audioResponse = await fetch(`/openai/audio?message=${encodeURIComponent(text)}`, {
+                method: 'GET'
+            });
+            if (!audioResponse.ok) throw new Error('Audio stream response was not ok');
+
+            await send({
+                type: 'PLAYBACK',
+                audioResponse,
+                responseId: messageId
+            });
+        } catch (error) {
+            console.error('Audio generation error:', error);
         }
     };
 
-    const sendMessage = async (message, mode) => {
+    const sendMessage = async (message, mode, send) => {
         if (!message.trim()) return;
 
-        const messageId = Date.now().toString();
-        const userMessage = {type: 'user', content: message, timestamp: new Date(), mode};
-        setMessages(msgs => [...msgs, userMessage]);
-        setIsLoading(true);
+        const messageId = uuidv4();
+        await send({
+            type: 'ASK',
+            message,
+            speaker: "user",
+            responder: "ai",
+            responseId: messageId,
+            mode
+        });
 
         try {
-            // First get the text response
             const endpoint = getEndpoint(mode);
-            const textResponse = await fetch(
-                `${endpoint}?message=${encodeURIComponent(message)}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
+            const textResponse = await fetch(`${endpoint}?message=${encodeURIComponent(message)}`, {
+                method: 'GET',
+                headers: {'Content-Type': 'application/json'}
+            });
             const responseText = await textResponse.text();
 
-            // Create and set up audio element
-            const audio = new Audio();
+            await send({type: 'STREAM', chunk: responseText, responseId: messageId});
+            await send({type: 'COMPLETE'});
 
-            // Now use that response text for the audio stream
-            const audioResponse = await fetch(
-                `/openai/stream?message=${encodeURIComponent(responseText)}`,
-                {method: 'GET'}
-            );
-
-            if (!audioResponse.ok) {
-                throw new Error('Audio stream response was not ok');
-            }
-
-            const mediaSource = new MediaSource();
-            audio.src = URL.createObjectURL(mediaSource);
-
-            mediaSource.addEventListener('sourceopen', async () => {
-                const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
-                const reader = audioResponse.body.getReader();
-                const chunks = [];
-
-                while (true) {
-                    const {done, value} = await reader.read();
-                    if (done) break;
-                    chunks.push(value);
-                }
-
-                for (const chunk of chunks) {
-                    await new Promise((resolve) => {
-                        if (!sourceBuffer.updating) {
-                            sourceBuffer.appendBuffer(chunk);
-                            sourceBuffer.addEventListener('updateend', resolve, {once: true});
-                        } else {
-                            sourceBuffer.addEventListener('updateend', () => {
-                                sourceBuffer.appendBuffer(chunk);
-                                sourceBuffer.addEventListener('updateend', resolve, {once: true});
-                            }, {once: true});
-                        }
-                    });
-                }
-
-                mediaSource.endOfStream();
-            });
-
-            // Store the audio element
-            setAudioElements(prev => ({
-                ...prev,
-                [messageId]: audio
-            }));
-
-            // Add AI message
-            setMessages(msgs => [...msgs, {
-                type: 'ai',
-                content: responseText,
-                timestamp: new Date(),
-                mode,
-                messageId,
-                hasAudio: true
-            }]);
-
+            await generateAudioForMessage(messageId, responseText, send);
             return true;
+
         } catch (error) {
-            console.error('Audio Error:', error);
-            setMessages(msgs => [...msgs, {
-                type: 'error',
-                content: 'Error: Failed to get response',
-                timestamp: new Date(),
-                mode
-            }]);
+            console.error('Error:', error);
+            await send({type: 'STREAM_ERROR', error: 'Failed to get response', responseId: messageId});
             return false;
         } finally {
             setIsLoading(false);
         }
     };
 
-    return {
-        messages,
-        isLoading,
-        sendMessage,
-        audioElements
+    const streamMessage = async (message, send) => {
+        if (!message.trim()) return;
+
+        const messageId = uuidv4();
+        let completeMessage = '';
+
+        await send({type: 'ASK', message, speaker: "user", responder: "ai", responseId: messageId});
+
+        try {
+            const response = await fetch(`/openai/stream?message=${encodeURIComponent(message)}`, {
+                method: 'GET',
+                headers: {'Content-Type': 'application/json'}
+            });
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+
+            while (true) {
+                const {done, value} = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value, {stream: true});
+                completeMessage += chunk;
+                await send({
+                    type: 'STREAM',
+                    chunk,
+                    responseId: messageId
+                });
+            }
+
+            await send({type: 'COMPLETE'});
+            if(message.mode !== 'openai-image'){
+                await generateAudioForMessage(messageId, completeMessage, send);
+            }
+            return true;
+
+        } catch (error) {
+            await send({type: 'STREAM_ERROR'});
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
     };
+
+    return {isLoading, sendMessage, streamMessage};
 };

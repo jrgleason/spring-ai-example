@@ -1,95 +1,118 @@
-import React, {useState} from 'react';
-import {LoadingSpinner} from './LoadingSpinner';
-import {MessageBubble} from './MessageBubble';
-import {ChatInput} from './ChatInput';
-import {ModeToggle} from './ModeToggle';
-import {useChat} from '../hooks/useChat';
-import {AddDocumentModal} from "./AddDocumentModal.jsx";
-import {Plus} from "lucide-react";
-import {DocumentGrid} from "./DocumentGrid.jsx";
+import React, { useState } from 'react';
+import { LoadingSpinner } from './LoadingSpinner';
+import { MessageBubble } from './MessageBubble';
+import { ChatInput } from './ChatInput';
+import { ModeToggle } from './ModeToggle';
+import { useChat } from '../hooks/useChat';
+import { useStateContext } from "../state/StateProvider.jsx";
+import AudioController from './AudioController';
+import Container from '@mui/material/Container';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Stack from '@mui/material/Stack';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Paper from '@mui/material/Paper';
 
 const ChatInterface = () => {
+    const { state, send } = useStateContext();
     const [message, setMessage] = useState('');
     const [mode, setMode] = useState('openai-chat');
-    const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false);
-    const {messages, isLoading, sendMessage, audioElements} = useChat();  // Added audioElements
+    const [isStreaming, setIsStreaming] = useState(false);
+    const { isLoading, sendMessage, streamMessage } = useChat();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const success = await sendMessage(message, mode);
-        if (success) {
-            setMessage('');
+        if (isStreaming) {
+            await streamMessage(message, send);
+        } else {
+            await sendMessage(message, mode, send);
         }
+        setMessage('');
     };
 
-    // Helper function to automatically scroll to bottom
-    const scrollToBottom = (behavior = 'smooth') => {
-        window.scrollTo({
-            top: document.documentElement.scrollHeight,
-            behavior
-        });
-    };
-
-    // Scroll to bottom whenever messages change
-    React.useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+    const EmptyState = () => (
+        <Box className="text-center mt-4">
+            <Typography variant="body2" className="text-gray-400 italic">
+                {mode === 'openai-image'
+                    ? 'Describe an image to generate...'
+                    : 'Start a conversation...'}
+            </Typography>
+        </Box>
+    );
 
     return (
-        <div className="max-w-2xl mx-auto p-4 space-y-4">
-            <div className="flex justify-between items-center">
-                <ModeToggle mode={mode} setMode={setMode}/>
-                <button
-                    onClick={() => setIsAddDocumentOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                >
-                    <Plus size={16}/>
-                    Add Document
-                </button>
-            </div>
-
-            <div className="rounded-lg bg-white p-4 shadow-md h-[600px] flex flex-col">
-                <div className="flex-1 overflow-y-auto space-y-2 mb-4 scroll-smooth">
-                    {messages.length === 0 ? (
-                        <div className="text-gray-400 italic text-center mt-4">
-                            {mode === 'openai-image'
-                                ? 'Describe an image to generate...'
-                                : 'Start a conversation...'}
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {messages.map((msg, index) => (
-                                <MessageBubble
-                                    key={index}
-                                    message={msg}
-                                    audio={msg.hasAudio ? audioElements[msg.messageId] : null}
+        <Container maxWidth="md" className="py-4">
+            <Stack spacing={2}>
+                {/* Controls Bar */}
+                <Paper className="p-4">
+                    <Stack direction="row" spacing={4} alignItems="center">
+                        {!isStreaming && <ModeToggle mode={mode} setMode={setMode} />}
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={isStreaming}
+                                    onChange={() => setIsStreaming(!isStreaming)}
+                                    inputProps={{ 'aria-label': 'Use streaming' }}
                                 />
-                            ))}
-                            {isLoading && (
-                                <div className="flex justify-center">
-                                    <LoadingSpinner/>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
+                            }
+                            label={
+                                <Typography variant="body2" className="text-gray-600">
+                                    Streaming
+                                </Typography>
+                            }
+                        />
+                    </Stack>
+                </Paper>
 
-                <ChatInput
-                    message={message}
-                    setMessage={setMessage}
-                    isLoading={isLoading}
-                    onSubmit={handleSubmit}
-                    mode={mode}
-                />
-            </div>
+                {/* Chat Container */}
+                <Card>
+                    <CardContent className="h-[600px] p-0">
+                        <Stack className="h-full">
+                            {/* Messages Area */}
+                            <Box className="flex-1 overflow-y-auto p-4">
+                                {Object.keys(state.context.messages).length === 0 ? (
+                                    <EmptyState />
+                                ) : (
+                                    <Stack spacing={2}>
+                                        {Object.values(state.context.messages).map((msg, index) => (
+                                            <MessageBubble
+                                                key={index}
+                                                message={{
+                                                    ...msg,
+                                                    showAudioController: false
+                                                }}
+                                            />
+                                        ))}
+                                        {isLoading && (
+                                            <Box className="flex justify-center">
+                                                <LoadingSpinner />
+                                            </Box>
+                                        )}
+                                    </Stack>
+                                )}
+                            </Box>
 
-            <DocumentGrid/>
-
-            <AddDocumentModal
-                isOpen={isAddDocumentOpen}
-                onClose={() => setIsAddDocumentOpen(false)}
-            />
-        </div>
+                            {/* Input Area */}
+                            <Paper className="p-4 border-t" elevation={0}>
+                                <Stack spacing={2}>
+                                    <ChatInput
+                                        message={message}
+                                        setMessage={setMessage}
+                                        isLoading={isLoading}
+                                        onSubmit={handleSubmit}
+                                        mode={mode}
+                                    />
+                                    <AudioController />
+                                </Stack>
+                            </Paper>
+                        </Stack>
+                    </CardContent>
+                </Card>
+            </Stack>
+        </Container>
     );
 };
 
