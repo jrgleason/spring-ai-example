@@ -6,49 +6,67 @@ const handleAudioPlayback = fromPromise(async ({input, context}) => {
     const mediaSource = new MediaSource();
     audio.src = URL.createObjectURL(mediaSource);
 
-    const appendChunks = async (sourceBuffer, reader) => {
-        const chunks = [];
-        while (true) {
-            const {done, value} = await reader.read();
-            if (done) break;
-            chunks.push(value);
-        }
-
-        for (const chunk of chunks) {
-            await new Promise((resolve, reject) => {
-                if (!sourceBuffer.updating) {
-                    sourceBuffer.appendBuffer(chunk);
-                    sourceBuffer.addEventListener('updateend', resolve, {once: true});
-                } else {
-                    sourceBuffer.addEventListener('updateend', () => {
-                        if (!sourceBuffer.updating) {
-                            sourceBuffer.appendBuffer(chunk);
-                            sourceBuffer.addEventListener('updateend', resolve, {once: true});
-                        } else {
-                            reject(new Error('SourceBuffer is still updating'));
-                        }
-                    }, {once: true});
-                }
-            }).catch(error => {
-                console.error('Error appending chunk:', error);
-            });
-        }
-    };
-
     await new Promise((resolve, reject) => {
         mediaSource.addEventListener('sourceopen', async () => {
             try {
-                const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
+                // Try different MIME types that are commonly supported
+                const mimeTypes = [
+                    'audio/mpeg',
+                    'audio/mp4',
+                    'audio/mp4; codecs="mp4a.40.2"',
+                    'audio/aac'
+                ];
+
+                let sourceBuffer = null;
+                for (const mimeType of mimeTypes) {
+                    if (MediaSource.isTypeSupported(mimeType)) {
+                        try {
+                            sourceBuffer = mediaSource.addSourceBuffer(mimeType);
+                            break;
+                        } catch (e) {
+                            console.log(`Failed to add source buffer for ${mimeType}:`, e);
+                            continue;
+                        }
+                    }
+                }
+
+                if (!sourceBuffer) {
+                    throw new Error('No supported audio MIME type found');
+                }
+
                 const reader = input.audioResponse.body.getReader();
-                await appendChunks(sourceBuffer, reader);
+                const chunks = [];
+
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+                    chunks.push(value);
+                }
+
+                for (const chunk of chunks) {
+                    await new Promise((resolveChunk) => {
+                        if (!sourceBuffer.updating) {
+                            sourceBuffer.appendBuffer(chunk);
+                            sourceBuffer.addEventListener('updateend', resolveChunk, {once: true});
+                        } else {
+                            sourceBuffer.addEventListener('updateend', () => {
+                                sourceBuffer.appendBuffer(chunk);
+                                sourceBuffer.addEventListener('updateend', resolveChunk, {once: true});
+                            }, {once: true});
+                        }
+                    });
+                }
+
                 mediaSource.endOfStream();
                 resolve(audio);
             } catch (error) {
                 reject(error);
             }
         });
-    }).catch(error => {
-        console.error('Error during media source open:', error);
+
+        mediaSource.addEventListener('sourceerror', (error) => {
+            reject(new Error('MediaSource error: ' + error));
+        });
     });
 
     return {
@@ -105,15 +123,10 @@ export const simpleMachine = createMachine({
                 }),
                 onDone: {
                     target: 'idle',
-                    actions: assign({
-                        audioElements: (_, {output}) => output,
-                        messages: (context, {output}) => ({
-                            ...context.messages,
-                            [Object.keys(output)[Object.keys(output).length - 1]]: {
-                                ...context.messages[Object.keys(output)[Object.keys(output).length - 1]],
-                                hasAudio: true
-                            }
-                        })
+                    actions: assign(({event, context}) => {
+                        return {
+                            audioElements: event.output,
+                        };
                     })
                 },
                 onError: {
@@ -135,33 +148,36 @@ export const simpleMachine = createMachine({
                     responder: event.responder
                 }),
                 onDone: {
-                    actions: assign({
-                        messages: (_, {output}) => output
+                    actions: assign(({event, context}) => {
+                        context.messages = event.output
                     })
                 },
                 onError: {
                     target: 'idle',
                     actions: assign({
-                        errorMessage: ({event}) => event.data
+                        errorMessage: ({event}) => {
+                            return event.data
+                        }
                     })
                 }
             },
             on: {
                 STREAM: {
-                    actions: assign({
-                        messages: (context, event) => ({
-                            ...context.messages,
-                            [event.responseId]: {
-                                ...context.messages[event.responseId],
-                                content: context.messages[event.responseId].content + event.chunk
-                            }
-                        })
+                    actions: assign(({context, event}) => {
+                        const currentValue = context.messages[event.responseId];
+                        context.messages[event.responseId] = {
+                            ...currentValue,
+                            content: currentValue.content + event.chunk
+                        }
                     })
                 },
                 STREAM_ERROR: {
                     target: 'idle',
                     actions: assign({
-                        errorMessage: ({event}) => event.error
+                        // TODO: Add error message to the responseId
+                        errorMessage: ({event}) => {
+                            return event.error
+                        }
                     })
                 },
                 COMPLETE: {
