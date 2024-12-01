@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bot, ImageIcon, Sparkles } from 'lucide-react';
 import { LoadingSpinner } from './LoadingSpinner';
 
 export const MessageBubble = ({ message }) => {
+    const [isLoading, setIsLoading] = useState(true);
     const isUser = message.type === 'user';
     const isError = message.type === 'error';
     const isImage = message.mode === 'openai-image' && message.type === 'ai';
-    const isEmpty = !message.content && !isUser;
+
+    useEffect(() => {
+        // If it's an AI message and content changes from empty to having content
+        if (message.type === 'ai' && message.content) {
+            setIsLoading(false);
+        }
+    }, [message.content, message.type]);
 
     const isBase64 = (str) => {
         try {
@@ -42,6 +49,38 @@ export const MessageBubble = ({ message }) => {
         }
     };
 
+    const renderContent = () => {
+        if (isImage && message.type === 'ai') {
+            return (
+                <img
+                    src={isBase64(message.content)
+                        ? `data:image/png;base64,${message.content}`
+                        : message.content}
+                    alt="Generated"
+                    className="rounded-lg max-w-full h-auto"
+                    onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v16m-8-8h16"/></svg>';
+                        e.target.classList.add('bg-gray-200', 'p-4');
+                        e.target.nextSibling.textContent = 'Error loading image';
+                    }}
+                />
+            );
+        }
+
+        return (
+            <div className="whitespace-pre-wrap min-h-[24px] min-w-[24px] flex items-center">
+                {!isUser && isLoading ? (
+                    <div className="flex justify-center w-full">
+                        <LoadingSpinner size="small" />
+                    </div>
+                ) : (
+                    message.content
+                )}
+            </div>
+        );
+    };
+
     return (
         <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
             <div
@@ -60,31 +99,7 @@ export const MessageBubble = ({ message }) => {
                     </div>
                 )}
 
-                {isImage && message.type === 'ai' ? (
-                    <img
-                        src={isBase64(message.content)
-                            ? `data:image/png;base64,${message.content}`
-                            : message.content}
-                        alt="Generated"
-                        className="rounded-lg max-w-full h-auto"
-                        onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v16m-8-8h16"/></svg>';
-                            e.target.classList.add('bg-gray-200', 'p-4');
-                            e.target.nextSibling.textContent = 'Error loading image';
-                        }}
-                    />
-                ) : (
-                    <div className="whitespace-pre-wrap min-h-[24px] min-w-[24px] flex items-center">
-                        {isEmpty ? (
-                            <div className="flex justify-center w-full">
-                                <LoadingSpinner size="small" />
-                            </div>
-                        ) : (
-                            message.content
-                        )}
-                    </div>
-                )}
+                {renderContent()}
 
                 <div className="flex flex-col gap-2">
                     <div className={`text-xs ${
