@@ -1,12 +1,12 @@
-// MessageBubble.jsx
 import React from 'react';
 import { Bot, ImageIcon, Sparkles } from 'lucide-react';
-import AudioController from './AudioController';
+import { LoadingSpinner } from './LoadingSpinner';
 
 export const MessageBubble = ({ message }) => {
     const isUser = message.type === 'user';
     const isError = message.type === 'error';
     const isImage = message.mode === 'openai-image' && message.type === 'ai';
+    const isEmpty = !message.content && !isUser;
 
     const isBase64 = (str) => {
         try {
@@ -75,14 +75,18 @@ export const MessageBubble = ({ message }) => {
                         }}
                     />
                 ) : (
-                    <div className="whitespace-pre-wrap">{message.content}</div>
+                    <div className="whitespace-pre-wrap min-h-[24px] min-w-[24px] flex items-center">
+                        {isEmpty ? (
+                            <div className="flex justify-center w-full">
+                                <LoadingSpinner size="small" />
+                            </div>
+                        ) : (
+                            message.content
+                        )}
+                    </div>
                 )}
 
                 <div className="flex flex-col gap-2">
-                    <div className="mt-2 mb-1">
-                        <AudioController  />
-                    </div>
-
                     <div className={`text-xs ${
                         isUser ? 'text-blue-100' : 'text-gray-500'
                     }`}>

@@ -190,10 +190,8 @@ export const simpleMachine = createMachine({
                 },
                 onError: {
                     target: 'idle',
-                    actions: assign({
-                        errorMessage: ({event}) => {
-                            return event.data
-                        }
+                    actions: assign(({event, context}) => {
+                        context.errorMessage = event.data
                     })
                 }
             },

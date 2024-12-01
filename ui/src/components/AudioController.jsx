@@ -10,27 +10,40 @@ const AudioController = () => {
 
     const {state, send} = useStateContext();
 
+    // Watch for audio becoming available
+    useEffect(() => {
+        console.log("Audio state changed:", state.context.audio);
+        if (state.context.audio) {
+            state.context.audio.play().catch(error => {
+                console.error('Error auto-playing audio:', error);
+                setIsPlaying(false);
+            });
+        }
+    }, [state.context.audio]);
+
+    // Handle audio event listeners
     useEffect(() => {
         const audio = state.context.audio;
         if (!audio) return;
 
         const updateProgress = () => setProgress((audio.currentTime / audio.duration) * 100);
 
-        audio.addEventListener('play', () => setIsPlaying(true));
-        audio.addEventListener('pause', () => setIsPlaying(false));
-        audio.addEventListener('ended', () => {
+        const handlePlay = () => setIsPlaying(true);
+        const handlePause = () => setIsPlaying(false);
+        const handleEnded = () => {
             setIsPlaying(false);
             setProgress(0);
-        });
+        };
+
+        audio.addEventListener('play', handlePlay);
+        audio.addEventListener('pause', handlePause);
+        audio.addEventListener('ended', handleEnded);
         audio.addEventListener('timeupdate', updateProgress);
 
         return () => {
-            audio.removeEventListener('play', () => setIsPlaying(true));
-            audio.removeEventListener('pause', () => setIsPlaying(false));
-            audio.removeEventListener('ended', () => {
-                setIsPlaying(false);
-                setProgress(0);
-            });
+            audio.removeEventListener('play', handlePlay);
+            audio.removeEventListener('pause', handlePause);
+            audio.removeEventListener('ended', handleEnded);
             audio.removeEventListener('timeupdate', updateProgress);
         };
     }, [state.context.audio]);
