@@ -1,8 +1,9 @@
+// MessageBubble.jsx
 import React from 'react';
-import {Bot, ImageIcon, Sparkles} from 'lucide-react';
+import { Bot, ImageIcon, Sparkles } from 'lucide-react';
 import AudioController from './AudioController';
 
-export const MessageBubble = ({message, audio}) => {
+export const MessageBubble = ({ message }) => {
     const isUser = message.type === 'user';
     const isError = message.type === 'error';
     const isImage = message.mode === 'openai-image' && message.type === 'ai';
@@ -78,11 +79,9 @@ export const MessageBubble = ({message, audio}) => {
                 )}
 
                 <div className="flex flex-col gap-2">
-                    {!isUser && message.hasAudio && audio && (
-                        <div className="mt-2 mb-1">
-                            <AudioController audio={audio}/>
-                        </div>
-                    )}
+                    <div className="mt-2 mb-1">
+                        <AudioController  />
+                    </div>
 
                     <div className={`text-xs ${
                         isUser ? 'text-blue-100' : 'text-gray-500'

@@ -12,7 +12,7 @@ const ChatInterface = () => {
     const [message, setMessage] = useState('');
     const [mode, setMode] = useState('openai-chat');
     const [isStreaming, setIsStreaming] = useState(true);
-    const {isLoading, sendMessage, audioElements, streamMessage} = useChat();
+    const {isLoading, sendMessage, streamMessage} = useChat();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -83,7 +83,6 @@ const ChatInterface = () => {
                                 <MessageBubble
                                     key={index}
                                     message={msg}
-                                    audio={msg.hasAudio ? audioElements[msg.messageId] : null}
                                 />
                             ))}
                             {isLoading && (

@@ -1,78 +1,116 @@
 import {assign, createMachine, fromPromise} from "xstate";
 import {v4 as uuidv4} from 'uuid';
 
-const handleAudioPlayback = fromPromise(async ({input, context}) => {
+const handleAudioPlayback = fromPromise(async ({ input, context }) => {
     const audio = new Audio();
     const mediaSource = new MediaSource();
+
+    // Create object URL and set as audio source
     audio.src = URL.createObjectURL(mediaSource);
 
-    await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         mediaSource.addEventListener('sourceopen', async () => {
             try {
-                // Try different MIME types that are commonly supported
+                console.log("Media source opened");
+                // Get the audio stream
+                const response = input.audioResponse;
+                const reader = response.body.getReader();
+
+                // Try to determine content type from response headers
+                const contentType = response.headers.get('content-type');
+                let sourceBuffer;
+
+                // Fallback MIME types if content-type header is missing or unsupported
                 const mimeTypes = [
+                    contentType,
                     'audio/mpeg',
                     'audio/mp4',
-                    'audio/mp4; codecs="mp4a.40.2"',
-                    'audio/aac'
-                ];
+                    'audio/aac',
+                    'audio/webm',
+                    'audio/webm; codecs=opus'
+                ].filter(Boolean); // Remove null/undefined entries
 
-                let sourceBuffer = null;
+                // Try each MIME type until we find one that works
                 for (const mimeType of mimeTypes) {
                     if (MediaSource.isTypeSupported(mimeType)) {
                         try {
                             sourceBuffer = mediaSource.addSourceBuffer(mimeType);
                             break;
                         } catch (e) {
-                            console.log(`Failed to add source buffer for ${mimeType}:`, e);
-                            continue;
+                            console.warn(`Failed to create source buffer for ${mimeType}:`, e);
                         }
                     }
                 }
 
                 if (!sourceBuffer) {
-                    throw new Error('No supported audio MIME type found');
+                    throw new Error('No supported audio format found');
                 }
 
-                const reader = input.audioResponse.body.getReader();
-                const chunks = [];
-
-                while (true) {
-                    const {done, value} = await reader.read();
-                    if (done) break;
-                    chunks.push(value);
-                }
-
-                for (const chunk of chunks) {
-                    await new Promise((resolveChunk) => {
+                // Function to safely append buffer
+                const appendBuffer = async (chunk) => {
+                    return new Promise((resolveAppend) => {
                         if (!sourceBuffer.updating) {
                             sourceBuffer.appendBuffer(chunk);
-                            sourceBuffer.addEventListener('updateend', resolveChunk, {once: true});
+                            sourceBuffer.addEventListener('updateend', resolveAppend, { once: true });
                         } else {
                             sourceBuffer.addEventListener('updateend', () => {
                                 sourceBuffer.appendBuffer(chunk);
-                                sourceBuffer.addEventListener('updateend', resolveChunk, {once: true});
-                            }, {once: true});
+                                sourceBuffer.addEventListener('updateend', resolveAppend, { once: true });
+                            }, { once: true });
                         }
                     });
+                };
+
+                // Process chunks as they arrive
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    try {
+                        await appendBuffer(value);
+                    } catch (e) {
+                        console.error('Error appending buffer:', e);
+                        // If we hit a quota exceeded error, try to remove some data
+                        if (e.name === 'QuotaExceededError') {
+                            const removeAmount = value.length;
+                            await new Promise(resolveRemove => {
+                                sourceBuffer.remove(0, removeAmount / sourceBuffer.timestampOffset);
+                                sourceBuffer.addEventListener('updateend', resolveRemove, { once: true });
+                            });
+                            await appendBuffer(value);
+                        } else {
+                            throw e;
+                        }
+                    }
                 }
 
-                mediaSource.endOfStream();
-                resolve(audio);
+                // All chunks processed, end the stream
+                if (mediaSource.readyState === 'open') {
+                    mediaSource.endOfStream();
+                }
+
+                // Set up audio element event handlers
+                audio.addEventListener('canplay', () => {
+                    resolve(audio);
+                }, { once: true });
+
+                audio.addEventListener('error', (e) => {
+                    reject(new Error('Audio element error: ' + e.error));
+                }, { once: true });
+
             } catch (error) {
                 reject(error);
             }
-        });
+        }, { once: true });
+
+        mediaSource.addEventListener('sourceclosed', () => {
+            reject(new Error('MediaSource was closed'));
+        }, { once: true });
 
         mediaSource.addEventListener('sourceerror', (error) => {
             reject(new Error('MediaSource error: ' + error));
-        });
+        }, { once: true });
     });
-
-    return {
-        ...context.audioElements,
-        [input.responseId]: audio
-    };
 });
 
 const askQuestion = fromPromise(async ({input}) => {
@@ -124,9 +162,7 @@ export const simpleMachine = createMachine({
                 onDone: {
                     target: 'idle',
                     actions: assign(({event, context}) => {
-                        return {
-                            audioElements: event.output,
-                        };
+                        context.audio = event.output;
                     })
                 },
                 onError: {

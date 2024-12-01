@@ -1,13 +1,17 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Pause, Play, Volume2, VolumeX} from 'lucide-react';
+import {useStateContext} from "../state/StateProvider.jsx";
 
-const AudioController = ({audio}) => {
+const AudioController = () => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const [progress, setProgress] = useState(0);
     const progressRef = useRef(null);
 
+    const {state, send} = useStateContext();
+
     useEffect(() => {
+        const audio = state.context.audio;
         if (!audio) return;
 
         const updateProgress = () => setProgress((audio.currentTime / audio.duration) * 100);
@@ -29,27 +33,27 @@ const AudioController = ({audio}) => {
             });
             audio.removeEventListener('timeupdate', updateProgress);
         };
-    }, [audio]);
+    }, [state.context.audio]);
 
     const togglePlay = () => {
+        const audio = state.context.audio;
         if (isPlaying) audio.pause();
         else audio.play().catch(console.error);
     };
 
     const toggleMute = () => {
+        const audio = state.context.audio;
         audio.muted = !audio.muted;
         setIsMuted(!isMuted);
     };
 
     const handleProgressClick = (e) => {
+        const audio = state.context.audio;
         const rect = progressRef.current.getBoundingClientRect();
         const newTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
         audio.currentTime = newTime;
         setProgress((newTime / audio.duration) * 100);
     };
-
-    if (!audio) return null;
-
     return (
         <div className="flex items-center gap-2 max-w-md">
             <button onClick={togglePlay} className="p-1 rounded-full hover:bg-gray-200 transition-colors"
