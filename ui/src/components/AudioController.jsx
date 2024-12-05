@@ -1,6 +1,6 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {Pause, Play, Volume2, VolumeX} from 'lucide-react';
-import {useStateContext} from "../state/StateProvider.jsx";
+import React, { useEffect, useRef, useState } from 'react';
+import { Pause, Play, Volume2, VolumeX } from 'lucide-react';
+import { useStateContext } from "../state/StateProvider.jsx";
 
 const AudioController = () => {
     const [isPlaying, setIsPlaying] = useState(false);
@@ -8,7 +8,7 @@ const AudioController = () => {
     const [progress, setProgress] = useState(0);
     const progressRef = useRef(null);
 
-    const {state, send} = useStateContext();
+    const { state, send } = useStateContext();
 
     // Watch for audio becoming available
     useEffect(() => {
@@ -33,6 +33,7 @@ const AudioController = () => {
         const handleEnded = () => {
             setIsPlaying(false);
             setProgress(0);
+            resetAudio();
         };
 
         audio.addEventListener('play', handlePlay);
@@ -67,6 +68,15 @@ const AudioController = () => {
         audio.currentTime = newTime;
         setProgress((newTime / audio.duration) * 100);
     };
+
+    const resetAudio = () => {
+        const audio = state.context.audio;
+        if (audio) {
+            audio.currentTime = 0;
+            audio.pause();
+        }
+    };
+
     return (
         <div className="flex items-center gap-2 max-w-md">
             <button onClick={togglePlay} className="p-1 rounded-full hover:bg-gray-200 transition-colors"

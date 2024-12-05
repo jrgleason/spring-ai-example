@@ -23,12 +23,12 @@ const ChatInterface = () => {
     const [isStreaming, setIsStreaming] = useState(false);
     const { isLoading, sendMessage, streamMessage } = useChat();
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         if (isStreaming) {
-            await streamMessage(message, send);
+            streamMessage(message, send);
         } else {
-            await sendMessage(message, mode, send);
+            sendMessage(message, mode, send);
         }
         setMessage('');
     };
@@ -69,7 +69,7 @@ const ChatInterface = () => {
 
                 {/* Chat Container */}
                 <Card>
-                    <CardContent className="h-[600px] p-0">
+                    <CardContent className="h-[25em] p-0">
                         <Stack className="h-full">
                             {/* Messages Area */}
                             <Box className="flex-1 overflow-y-auto p-4">
