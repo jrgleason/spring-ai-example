@@ -15,6 +15,7 @@ import Typography from '@mui/material/Typography';
 import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Paper from '@mui/material/Paper';
+import AudioDebugger from "./AudioDebugger.jsx";
 
 const ChatInterface = () => {
     const { state, send } = useStateContext();
@@ -22,12 +23,6 @@ const ChatInterface = () => {
     const [mode, setMode] = useState('openai-chat');
     const [isStreaming, setIsStreaming] = useState(false);
     const { isLoading, sendMessage, streamMessage } = useChat();
-
-    // Add debug logging
-    useEffect(() => {
-        console.log('Current state:', state);
-        console.log('Send function:', send);
-    }, [state, send]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -111,7 +106,8 @@ const ChatInterface = () => {
                                         onSubmit={handleSubmit}
                                         mode={mode}
                                     />
-                                    {state.context.audioSupported && <AudioController />}
+                                    <AudioDebugger />
+                                    <AudioController />
                                 </Stack>
                             </Paper>
                         </Stack>

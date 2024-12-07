@@ -2,12 +2,6 @@ import {assign, createMachine, fromPromise} from "xstate";
 import {v4 as uuidv4} from 'uuid';
 
 const handleAudioPlayback = fromPromise(async ({ input, context }) => {
-    // First check if audio is supported
-    if (!window.Audio || !window.MediaSource || !MediaSource.isTypeSupported) {
-        console.warn('Audio playback not supported in this browser');
-        return { audioSupported: false };
-    }
-
     const audio = new Audio();
     const mediaSource = new MediaSource();
 
@@ -49,7 +43,7 @@ const handleAudioPlayback = fromPromise(async ({ input, context }) => {
                 }
 
                 if (!sourceBuffer) {
-                    return resolve({ audioSupported: false, error: 'No supported audio format found' });
+                    throw new Error('No supported audio format found');
                 }
 
                 // Function to safely append buffer
@@ -84,7 +78,7 @@ const handleAudioPlayback = fromPromise(async ({ input, context }) => {
                             });
                             await appendBuffer(value);
                         } else {
-                            return resolve({ audioSupported: false, error: e.message });
+                            throw e;
                         }
                     }
                 }
@@ -96,31 +90,31 @@ const handleAudioPlayback = fromPromise(async ({ input, context }) => {
 
                 // Set up audio element event handlers
                 audio.addEventListener('canplay', () => {
-                    resolve({ audio, audioSupported: true });
+                    resolve(audio);
                 }, { once: true });
 
                 audio.addEventListener('error', (e) => {
-                    resolve({ audioSupported: false, error: 'Audio element error: ' + e.error });
+                    reject(new Error('Audio element error: ' + e.error));
                 }, { once: true });
 
             } catch (error) {
-                resolve({ audioSupported: false, error: error.message });
+                reject(error);
             }
         }, { once: true });
 
         mediaSource.addEventListener('sourceclosed', () => {
-            resolve({ audioSupported: false, error: 'MediaSource was closed' });
+            reject(new Error('MediaSource was closed'));
         }, { once: true });
 
         mediaSource.addEventListener('sourceerror', (error) => {
-            resolve({ audioSupported: false, error: 'MediaSource error: ' + error });
+            reject(new Error('MediaSource error: ' + error));
         }, { once: true });
     });
 });
 
 const askQuestion = fromPromise(async ({input}) => {
     try {
-        console.log(`Adding message ${input.message} by ${input.speaker}`);
+        // console.log(`Adding message ${input.message} by ${input.speaker}`);
         return {
             ...input.messages,
             [uuidv4()]: {
@@ -146,7 +140,6 @@ export const simpleMachine = createMachine({
     context: {
         messages: {},
         isLoading: false,
-        audioElements: {},
         errorMessage: ""
     },
     states: {
@@ -154,7 +147,7 @@ export const simpleMachine = createMachine({
             on: {
                 ASK: 'ask',
                 PLAYBACK: {
-                    target: 'playback',
+                    target: 'playback'
                 }
             }
         },
@@ -167,38 +160,29 @@ export const simpleMachine = createMachine({
                 }),
                 onDone: {
                     target: 'idle',
-                    actions: assign(({event, context}) => {
-                        // Check the response from handleAudioPlayback
-                        if (event.output && event.output.audioSupported === false) {
-                            context.audioSupported = false;
-                            console.warn('Audio playback not supported or failed');
-                        }
-                        if (event.output && event.output.audio) {
-                            context.audio = event.output.audio;
-                        }
-                    })
+                    actions: [
+                        assign(({event, context}) => {
+                            console.log('=== Assigning audio to context ===');
+                            context.audio = event.output;
+                            return context;
+                        })
+                    ]
                 },
                 onError: {
                     target: 'idle',
                     actions: assign({
-                        audioSupported: false,
-                        errorMessage: ({event}) => {
-                            console.warn('Audio playback error:', event.data);
-                            return 'Audio playback not supported in this browser';
-                        }
+                        errorMessage: ({event}) => event.data
                     })
                 }
             },
             on: {
                 ASK: {
                     target: 'ask',
-                    // Cancel the audio playback when transitioning to ask
-                    actions: assign(({context}) => {
-                        if (context.audio) {
-                            context.audio.pause();
-                            context.audio = null;
-                        }
-                    })
+                    // actions: (context) => {
+                    //     if (context.audio) {
+                    //         context.audio.pause();
+                    //     }
+                    // }
                 }
             }
         },
@@ -215,13 +199,13 @@ export const simpleMachine = createMachine({
                 }),
                 onDone: {
                     actions: assign(({event, context}) => {
-                        context.messages = event.output
+                        context.messages = event.output;
                     })
                 },
                 onError: {
                     target: 'idle',
                     actions: assign(({event, context}) => {
-                        context.errorMessage = event.data
+                        context.errorMessage = event.data;
                     })
                 }
             },
@@ -232,16 +216,13 @@ export const simpleMachine = createMachine({
                         context.messages[event.responseId] = {
                             ...currentValue,
                             content: currentValue.content + event.chunk
-                        }
+                        };
                     })
                 },
                 STREAM_ERROR: {
                     target: 'idle',
                     actions: assign({
-                        // TODO: Add error message to the responseId
-                        errorMessage: ({event}) => {
-                            return event.error
-                        }
+                        errorMessage: ({event}) => event.error
                     })
                 },
                 COMPLETE: {

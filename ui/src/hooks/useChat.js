@@ -14,11 +14,20 @@ export const useChat = () => {
     };
 
     const generateAudioForMessage = async (messageId, text, send) => {
+        if (!text) {
+            console.warn('No text provided for audio generation');
+            return;
+        }
+
         try {
+            console.log('Generating audio for:', text.substring(0, 50) + '...');
             const audioResponse = await fetch(`/openai/audio?message=${encodeURIComponent(text)}`, {
                 method: 'GET'
             });
-            if (!audioResponse.ok) throw new Error('Audio stream response was not ok');
+
+            if (!audioResponse.ok) {
+                throw new Error(`Audio stream response was not ok: ${audioResponse.status}`);
+            }
 
             await send({
                 type: 'PLAYBACK',
