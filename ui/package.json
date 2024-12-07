@@ -14,13 +14,12 @@
   "dependencies": {
     "@emotion/react": "latest",
     "@emotion/styled": "latest",
-    "@monaco-editor/react": "latest",
     "@mui/material": "latest",
     "@vitejs/plugin-react": "latest",
     "@xstate/react": "latest",
     "lucide-react": "latest",
-    "react": "latest",
-    "react-dom": "latest",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "uuid": "latest",
     "vite": "latest",
     "xstate": "latest"
