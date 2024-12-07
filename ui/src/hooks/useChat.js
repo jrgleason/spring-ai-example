@@ -108,61 +108,24 @@ export const useChat = () => {
                 headers: {'Content-Type': 'application/json'}
             });
 
-            // First check if this is a cached response by looking at the first chunk
-            const firstChunk = await response.text();
-            let isCached = false;
-            let cachedContent = '';
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
 
-            try {
-                const jsonResponse = JSON.parse(firstChunk);
-                if (jsonResponse.metadata && jsonResponse.metadata.cache_hit) {
-                    isCached = true;
-                    cachedContent = jsonResponse.generation.content;
-                }
-            } catch (e) {
-                // Not JSON, so not a cached response
-                isCached = false;
-            }
-
-            if (isCached) {
-                // Handle cached response similar to non-streaming
-                completeMessage = cachedContent;
+            while (true) {
+                const {done, value} = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value, {stream: true});
+                completeMessage += chunk;
                 await send({
                     type: 'STREAM',
-                    chunk: cachedContent,
+                    chunk,
                     responseId: messageId
                 });
-            } else {
-                // Handle streaming response
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder("utf-8");
-
-                // If we already got the first chunk (non-cached case), process it
-                if (firstChunk) {
-                    completeMessage += firstChunk;
-                    await send({
-                        type: 'STREAM',
-                        chunk: firstChunk,
-                        responseId: messageId
-                    });
-                }
-
-                while (true) {
-                    const {done, value} = await reader.read();
-                    if (done) break;
-                    const chunk = decoder.decode(value, {stream: true});
-                    completeMessage += chunk;
-                    await send({
-                        type: 'STREAM',
-                        chunk,
-                        responseId: messageId
-                    });
-                }
             }
 
             await send({type: 'COMPLETE'});
 
-            if(message.mode !== 'openai-image'){
+            if (message.mode !== 'openai-image') {
                 await generateAudioForMessage(messageId, completeMessage, send);
             }
             return true;
