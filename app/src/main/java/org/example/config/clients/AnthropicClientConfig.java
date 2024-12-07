@@ -9,22 +9,12 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class AnthropicClientConfig extends BaseClientConfig {
-
-    private final ChatClient.Builder anthropicBuilder;
-
-    public AnthropicClientConfig(@Qualifier("anthropicChatClientBuilder") ChatClient.Builder anthropicBuilder) {
-        this.anthropicBuilder = anthropicBuilder;
-    }
-
-    @Override
-    protected ChatClient.Builder getBuilder() {
-        return anthropicBuilder;
-    }
-
     @Bean(name = "anthropicBuildClient")
-    @Override
-    public ChatClient buildClient(MessageChatMemoryAdvisor messageChatMemoryAdvisor) {
-        return getBuilder()
+    public ChatClient buildClient(
+            @Qualifier("anthropicChatClientBuilder") ChatClient.Builder anthropicBuilder,
+            MessageChatMemoryAdvisor messageChatMemoryAdvisor
+    ) {
+        return anthropicBuilder
                 .defaultAdvisors(messageChatMemoryAdvisor)
                 .defaultSystem(instructions)
                 .defaultOptions(new AnthropicChatOptions())

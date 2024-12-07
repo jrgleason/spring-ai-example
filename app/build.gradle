@@ -37,13 +37,13 @@ ext {
 }
 
 dependencies {
+    implementation platform("org.springframework.ai:spring-ai-bom:${springAiVersion}")
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-logging'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
     implementation 'org.springframework.boot:spring-boot-starter-integration'
     implementation 'org.springframework.integration:spring-integration-mqtt:6.3.4'
 
@@ -51,7 +51,6 @@ dependencies {
     implementation "org.springframework.ai:spring-ai-anthropic-spring-boot-starter:${springAiVersion}"
     implementation "org.springframework.ai:spring-ai-pinecone-store-spring-boot-starter:${springAiVersion}"
     implementation "org.springframework.ai:spring-ai-redis-store-spring-boot-starter:${springAiVersion}"
-
     implementation 'org.springframework.boot:spring-boot-starter-websocket:3.3.5'
 
     implementation 'com.github.ben-manes.caffeine:caffeine'
