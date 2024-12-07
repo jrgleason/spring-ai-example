@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LoadingSpinner } from './LoadingSpinner';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
@@ -22,6 +22,12 @@ const ChatInterface = () => {
     const [mode, setMode] = useState('openai-chat');
     const [isStreaming, setIsStreaming] = useState(false);
     const { isLoading, sendMessage, streamMessage } = useChat();
+
+    // Add debug logging
+    useEffect(() => {
+        console.log('Current state:', state);
+        console.log('Send function:', send);
+    }, [state, send]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -105,7 +111,7 @@ const ChatInterface = () => {
                                         onSubmit={handleSubmit}
                                         mode={mode}
                                     />
-                                    <AudioController />
+                                    {state.context.audioSupported && <AudioController />}
                                 </Stack>
                             </Paper>
                         </Stack>

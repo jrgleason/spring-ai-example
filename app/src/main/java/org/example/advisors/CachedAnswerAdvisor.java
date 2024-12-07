@@ -22,13 +22,12 @@ import java.util.Map;
  * The similarity search is performed only on the question part, not the answer.
  */
 public class CachedAnswerAdvisor implements CallAroundAdvisor, StreamAroundAdvisor {
-
     public static final String CACHE_HIT = "cache_hit";
     public static final String SIMILARITY_SCORE = "similarity_score";
     public static final String ORIGINAL_QUESTION = "original_question";
+    private static final Logger logger = LoggerFactory.getLogger(CachedAnswerAdvisor.class);
     private static final double DEFAULT_SIMILARITY_THRESHOLD = 0.95;
     private static final int DEFAULT_ORDER = 0;
-    private final Logger logger = LoggerFactory.getLogger(CachedAnswerAdvisor.class);
     private final VectorStore vectorStore;
     private final double similarityThreshold;
     private final int order;
@@ -107,15 +106,25 @@ public class CachedAnswerAdvisor implements CallAroundAdvisor, StreamAroundAdvis
     }
 
     private Document findBestMatch(String query) {
+        logger.debug("Searching for query: {}", query);
         SearchRequest searchRequest = SearchRequest.query(query).withTopK(1);
         List<Document> results = vectorStore.similaritySearch(searchRequest);
 
         if (!results.isEmpty()) {
             Document match = results.getFirst();
-            logger.debug("Query: {}", query);
-            logger.debug("Best match content: {}", match.getContent());
-            logger.debug("Best match metadata: {}", match.getMetadata());
-            logger.debug("Vector score: {}", match.getMetadata().get("vector_score"));
+            logger.debug("Found match with ID: {}", match.getId());
+            logger.debug("Match content: {}", match.getContent());
+            logger.debug("Match metadata: {}", match.getMetadata());
+            logger.debug("Match vector score: {}", match.getMetadata().get("vector_score"));
+
+            // Try to parse and log raw JSON content
+            try {
+                logger.debug("Raw document: {}", match);
+            } catch (Exception e) {
+                logger.warn("Failed to parse document as JSON", e);
+            }
+        } else {
+            logger.debug("No matches found for query: {}", query);
         }
 
         return results.isEmpty() ? null : results.getFirst();
@@ -145,66 +154,29 @@ public class CachedAnswerAdvisor implements CallAroundAdvisor, StreamAroundAdvis
     }
 
     private AdvisedResponse createCachedResponse(Document match, AdvisedRequest request) {
+        logger.debug("Creating cached response from match: {}", match);
         Map<String, Object> metadata = new HashMap<>();
         metadata.put(CACHE_HIT, true);
         metadata.put(SIMILARITY_SCORE, match.getMetadata().get("vector_score"));
-        metadata.put(ORIGINAL_QUESTION, match.getMetadata().get("original_question"));
 
-        // Extract answer from content if metadata is not available
-        String originalAnswer;
-        if (match.getMetadata().containsKey("original_answer")) {
-            originalAnswer = (String) match.getMetadata().get("original_answer");
-        } else {
-            // Parse from content assuming old format
-            String content = match.getContent();
-            int answerStart = content.indexOf("Answer: ");
-            if (answerStart != -1) {
-                originalAnswer = content.substring(answerStart + 8);
-            } else {
-                originalAnswer = content;
-            }
-        }
+        String originalAnswer = extractAnswer(match);
+
+        // Create response with metadata included
         ChatResponse response = ChatResponse.builder()
+                                            .withMetadata(CACHE_HIT, true)
+                                            .withMetadata(SIMILARITY_SCORE, match.getMetadata().get("vector_score"))
                                             .withGenerations(List.of(new Generation(new AssistantMessage(originalAnswer))))
                                             .build();
 
         return new AdvisedResponse(response, request.adviseContext());
     }
 
-    /**
-     * Cleans up old format entries in the cache.
-     * Call this method if you have old format entries in your Redis store.
-     */
-    public void cleanupOldFormatEntries() {
-        SearchRequest searchRequest = SearchRequest.query("Question:").withTopK(100);
-        List<Document> oldDocs = vectorStore.similaritySearch(searchRequest);
-
-        for (Document doc : oldDocs) {
-            String content = doc.getContent();
-            if (content.startsWith("Question: ")) {
-                int answerStart = content.indexOf("Answer: ");
-                if (answerStart != -1) {
-                    String question = content.substring(9, answerStart).trim();
-                    String answer = content.substring(answerStart + 8).trim();
-                    // Re-cache in new format
-                    cacheResponse(question, answer);
-                    // TODO: Add method to delete old document if your VectorStore implementation supports it
-                }
-            }
-        }
-    }
-
-    /**
-     * Adds a new question-answer pair to the cache.
-     * Only the question is used for embedding and similarity search,
-     * while the answer is stored in metadata.
-     */
     public void cacheResponse(String question, String answer) {
-        // Create metadata map with all fields we want to store
+        // Create metadata map with plain field names
         Map<String, Object> metadata = new HashMap<>();
-        metadata.put("$.original_question", question);  // Using JSON path notation
-        metadata.put("$.original_answer", answer);
-        metadata.put("$.type", "cached_response");
+        metadata.put("original_question", question);
+        metadata.put("original_answer", answer);
+        metadata.put("type", "cached_response");
 
         logger.debug("Creating document with metadata: {}", metadata);
 
@@ -213,6 +185,34 @@ public class CachedAnswerAdvisor implements CallAroundAdvisor, StreamAroundAdvis
         logger.debug("Created document: {}", doc);
 
         vectorStore.add(List.of(doc));
+        logger.debug("Document added to vector store");
+    }
+
+    private String extractAnswer(Document match) {
+        logger.debug("Extracting answer from document: {}", match);
+
+        // Try to get answer from metadata first
+        Map<String, Object> docMetadata = match.getMetadata();
+        if (docMetadata.containsKey("original_answer")) {
+            String answer = (String) docMetadata.get("original_answer");
+            logger.debug("Found answer in metadata: {}", answer);
+            return answer;
+        }
+
+        // Fallback to parsing from content if not in metadata
+        String content = match.getContent();
+        logger.debug("No answer in metadata, checking content: {}", content);
+
+        int answerStart = content.indexOf("Answer: ");
+        if (answerStart != -1) {
+            String answer = content.substring(answerStart + 8);
+            logger.debug("Found answer in content: {}", answer);
+            return answer;
+        }
+
+        // If no "Answer: " prefix found, use entire content
+        logger.warn("No answer prefix found in content, using entire content as answer");
+        return content;
     }
 
     public static class Builder {

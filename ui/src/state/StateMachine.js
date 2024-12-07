@@ -2,6 +2,12 @@ import {assign, createMachine, fromPromise} from "xstate";
 import {v4 as uuidv4} from 'uuid';
 
 const handleAudioPlayback = fromPromise(async ({ input, context }) => {
+    // First check if audio is supported
+    if (!window.Audio || !window.MediaSource || !MediaSource.isTypeSupported) {
+        console.warn('Audio playback not supported in this browser');
+        return { audioSupported: false };
+    }
+
     const audio = new Audio();
     const mediaSource = new MediaSource();
 
@@ -28,7 +34,7 @@ const handleAudioPlayback = fromPromise(async ({ input, context }) => {
                     'audio/aac',
                     'audio/webm',
                     'audio/webm; codecs=opus'
-                ].filter(Boolean); // Remove null/undefined entries
+                ].filter(Boolean);
 
                 // Try each MIME type until we find one that works
                 for (const mimeType of mimeTypes) {
@@ -43,7 +49,7 @@ const handleAudioPlayback = fromPromise(async ({ input, context }) => {
                 }
 
                 if (!sourceBuffer) {
-                    throw new Error('No supported audio format found');
+                    return resolve({ audioSupported: false, error: 'No supported audio format found' });
                 }
 
                 // Function to safely append buffer
@@ -70,7 +76,6 @@ const handleAudioPlayback = fromPromise(async ({ input, context }) => {
                         await appendBuffer(value);
                     } catch (e) {
                         console.error('Error appending buffer:', e);
-                        // If we hit a quota exceeded error, try to remove some data
                         if (e.name === 'QuotaExceededError') {
                             const removeAmount = value.length;
                             await new Promise(resolveRemove => {
@@ -79,7 +84,7 @@ const handleAudioPlayback = fromPromise(async ({ input, context }) => {
                             });
                             await appendBuffer(value);
                         } else {
-                            throw e;
+                            return resolve({ audioSupported: false, error: e.message });
                         }
                     }
                 }
@@ -91,24 +96,24 @@ const handleAudioPlayback = fromPromise(async ({ input, context }) => {
 
                 // Set up audio element event handlers
                 audio.addEventListener('canplay', () => {
-                    resolve(audio);
+                    resolve({ audio, audioSupported: true });
                 }, { once: true });
 
                 audio.addEventListener('error', (e) => {
-                    reject(new Error('Audio element error: ' + e.error));
+                    resolve({ audioSupported: false, error: 'Audio element error: ' + e.error });
                 }, { once: true });
 
             } catch (error) {
-                reject(error);
+                resolve({ audioSupported: false, error: error.message });
             }
         }, { once: true });
 
         mediaSource.addEventListener('sourceclosed', () => {
-            reject(new Error('MediaSource was closed'));
+            resolve({ audioSupported: false, error: 'MediaSource was closed' });
         }, { once: true });
 
         mediaSource.addEventListener('sourceerror', (error) => {
-            reject(new Error('MediaSource error: ' + error));
+            resolve({ audioSupported: false, error: 'MediaSource error: ' + error });
         }, { once: true });
     });
 });
@@ -163,13 +168,36 @@ export const simpleMachine = createMachine({
                 onDone: {
                     target: 'idle',
                     actions: assign(({event, context}) => {
-                        context.audio = event.output;
+                        // Check the response from handleAudioPlayback
+                        if (event.output && event.output.audioSupported === false) {
+                            context.audioSupported = false;
+                            console.warn('Audio playback not supported or failed');
+                        }
+                        if (event.output && event.output.audio) {
+                            context.audio = event.output.audio;
+                        }
                     })
                 },
                 onError: {
                     target: 'idle',
                     actions: assign({
-                        errorMessage: ({event}) => event.data
+                        audioSupported: false,
+                        errorMessage: ({event}) => {
+                            console.warn('Audio playback error:', event.data);
+                            return 'Audio playback not supported in this browser';
+                        }
+                    })
+                }
+            },
+            on: {
+                ASK: {
+                    target: 'ask',
+                    // Cancel the audio playback when transitioning to ask
+                    actions: assign(({context}) => {
+                        if (context.audio) {
+                            context.audio.pause();
+                            context.audio = null;
+                        }
                     })
                 }
             }
