@@ -24,9 +24,8 @@ import java.util.Map;
 public class CachedAnswerAdvisor implements CallAroundAdvisor, StreamAroundAdvisor {
     public static final String CACHE_HIT = "cache_hit";
     public static final String SIMILARITY_SCORE = "similarity_score";
-    public static final String ORIGINAL_QUESTION = "original_question";
     private static final Logger logger = LoggerFactory.getLogger(CachedAnswerAdvisor.class);
-    private static final double DEFAULT_SIMILARITY_THRESHOLD = 0.95;
+    private static final double DEFAULT_SIMILARITY_THRESHOLD = 0.97;
     private static final int DEFAULT_ORDER = 0;
     private final VectorStore vectorStore;
     private final double similarityThreshold;

@@ -106,7 +106,7 @@ const ChatInterface = () => {
                                         onSubmit={handleSubmit}
                                         mode={mode}
                                     />
-                                    <AudioDebugger />
+                                    {/*<AudioDebugger />*/}
                                     <AudioController />
                                 </Stack>
                             </Paper>
