@@ -1,16 +1,13 @@
-// components/AddDocumentModal.jsx
-import React, {useState} from 'react';
-import {X} from 'lucide-react';
-import Editor from "@monaco-editor/react";
+import React, { useState } from 'react';
+import { X } from 'lucide-react';
 
-export const AddDocumentModal = ({isOpen, onClose}) => {
+export const AddDocumentModal = ({ isOpen, onClose }) => {
     const [content, setContent] = useState('{\n  \n}');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
 
-    const handleEditorChange = (value) => {
-        setContent(value);
-        // Clear any previous error when user starts typing
+    const handleEditorChange = (e) => {
+        setContent(e.target.value);
         if (error) setError(null);
     };
 
@@ -19,7 +16,6 @@ export const AddDocumentModal = ({isOpen, onClose}) => {
         setIsSubmitting(true);
         setError(null);
 
-        // Validate JSON before submitting
         try {
             JSON.parse(content);
         } catch (e) {
@@ -34,7 +30,7 @@ export const AddDocumentModal = ({isOpen, onClose}) => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({content}),
+                body: JSON.stringify({ content }),
             });
 
             if (!response.ok) {
@@ -80,7 +76,7 @@ export const AddDocumentModal = ({isOpen, onClose}) => {
                             onClick={onClose}
                             className="text-gray-500 hover:text-gray-700"
                         >
-                            <X size={24}/>
+                            <X size={24} />
                         </button>
                     </div>
                 </div>
@@ -88,21 +84,11 @@ export const AddDocumentModal = ({isOpen, onClose}) => {
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
                         <div className="h-[500px] border rounded-lg overflow-hidden">
-                            <Editor
-                                height="100%"
-                                defaultLanguage="json"
+                            <textarea
                                 value={content}
                                 onChange={handleEditorChange}
-                                theme="vs-light"
-                                options={{
-                                    minimap: {enabled: false},
-                                    fontSize: 14,
-                                    formatOnPaste: true,
-                                    formatOnType: true,
-                                    scrollBeyondLastLine: false,
-                                    tabSize: 2,
-                                    automaticLayout: true,
-                                }}
+                                className="w-full h-full p-2 border rounded-lg"
+                                style={{ fontFamily: 'monospace', fontSize: '14px' }}
                             />
                         </div>
                         {error && (

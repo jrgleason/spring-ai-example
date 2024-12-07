@@ -1,5 +1,6 @@
 package org.example.config.clients;
 
+import org.example.advisors.CachedAnswerAdvisor;
 import org.example.advisors.SimpleLoggingAdvisor;
 import org.example.service.DeviceStateService;
 import org.example.service.ToggleFunction;
@@ -19,33 +20,27 @@ import java.util.function.Function;
 @Configuration
 public class OpenAIClientConfig extends BaseClientConfig {
 
-    private final ChatClient.Builder openAiBuilder;
-    private final VectorStore vectorStore;
     private final DeviceStateService deviceStateService;
 
     public OpenAIClientConfig(
-            DeviceStateService deviceStateService,
-            @Qualifier("openAiChatClientBuilder") ChatClient.Builder openAiBuilder,
-            VectorStore vectorStore
+            DeviceStateService deviceStateService
     ) {
         this.deviceStateService = deviceStateService;
-        this.openAiBuilder = openAiBuilder;
-        this.vectorStore = vectorStore;
-    }
-
-    @Override
-    protected ChatClient.Builder getBuilder() {
-        return openAiBuilder;
     }
 
     @Bean(name = "openAiBuildClient")
-    @Override
-    public ChatClient buildClient(MessageChatMemoryAdvisor messageChatMemoryAdvisor) {
-        return getBuilder()
+    public ChatClient buildClient(
+            @Qualifier("openAiChatClientBuilder") ChatClient.Builder openAiBuilder,
+            MessageChatMemoryAdvisor messageChatMemoryAdvisor,
+            @Qualifier("customRedisVectorStore") VectorStore redisVectorStore,
+            @Qualifier("vectorStore") VectorStore pineconeVectorStore
+    ) {
+        return openAiBuilder
                 .defaultAdvisors(
                         messageChatMemoryAdvisor,
-                        new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults()),
-                        new SimpleLoggingAdvisor()
+                        new QuestionAnswerAdvisor(pineconeVectorStore, SearchRequest.defaults()),
+                        new SimpleLoggingAdvisor(),
+                        new CachedAnswerAdvisor(redisVectorStore)
                 )
                 .defaultFunctions("toggleDevice")
                 .defaultSystem(instructions)
