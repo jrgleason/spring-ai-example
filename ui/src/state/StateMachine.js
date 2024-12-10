@@ -1,6 +1,14 @@
 import {assign, createMachine, fromPromise} from "xstate";
 import {v4 as uuidv4} from 'uuid';
 
+const deleteAllDocuments = fromPromise(async () => {
+    const response = await fetch('/api/cache/deleteAll', { method: 'DELETE' });
+    if (!response.ok) {
+        throw new Error('Failed to delete all documents');
+    }
+    return 'All documents were deleted successfully';
+});
+
 const handleAudioPlayback = fromPromise(async ({ input, context }) => {
     const audio = new Audio();
     const mediaSource = new MediaSource();
@@ -28,7 +36,7 @@ const handleAudioPlayback = fromPromise(async ({ input, context }) => {
                     'audio/aac',
                     'audio/webm',
                     'audio/webm; codecs=opus'
-                ].filter(Boolean); // Remove null/undefined entries
+                ].filter(Boolean);
 
                 // Try each MIME type until we find one that works
                 for (const mimeType of mimeTypes) {
@@ -70,7 +78,6 @@ const handleAudioPlayback = fromPromise(async ({ input, context }) => {
                         await appendBuffer(value);
                     } catch (e) {
                         console.error('Error appending buffer:', e);
-                        // If we hit a quota exceeded error, try to remove some data
                         if (e.name === 'QuotaExceededError') {
                             const removeAmount = value.length;
                             await new Promise(resolveRemove => {
@@ -115,7 +122,7 @@ const handleAudioPlayback = fromPromise(async ({ input, context }) => {
 
 const askQuestion = fromPromise(async ({input}) => {
     try {
-        console.log(`Adding message ${input.message} by ${input.speaker}`);
+        // console.log(`Adding message ${input.message} by ${input.speaker}`);
         return {
             ...input.messages,
             [uuidv4()]: {
@@ -141,7 +148,6 @@ export const simpleMachine = createMachine({
     context: {
         messages: {},
         isLoading: false,
-        audioElements: {},
         errorMessage: ""
     },
     states: {
@@ -149,8 +155,9 @@ export const simpleMachine = createMachine({
             on: {
                 ASK: 'ask',
                 PLAYBACK: {
-                    target: 'playback',
-                }
+                    target: 'playback'
+                },
+                DELETE_ALL: 'deleteAll'
             }
         },
         playback: {
@@ -162,15 +169,29 @@ export const simpleMachine = createMachine({
                 }),
                 onDone: {
                     target: 'idle',
-                    actions: assign(({event, context}) => {
-                        context.audio = event.output;
-                    })
+                    actions: [
+                        assign(({event, context}) => {
+                            console.log('=== Assigning audio to context ===');
+                            context.audio = event.output;
+                            return context;
+                        })
+                    ]
                 },
                 onError: {
                     target: 'idle',
                     actions: assign({
                         errorMessage: ({event}) => event.data
                     })
+                }
+            },
+            on: {
+                ASK: {
+                    target: 'ask',
+                    // actions: (context) => {
+                    //     if (context.audio) {
+                    //         context.audio.pause();
+                    //     }
+                    // }
                 }
             }
         },
@@ -187,13 +208,13 @@ export const simpleMachine = createMachine({
                 }),
                 onDone: {
                     actions: assign(({event, context}) => {
-                        context.messages = event.output
+                        context.messages = event.output;
                     })
                 },
                 onError: {
                     target: 'idle',
                     actions: assign(({event, context}) => {
-                        context.errorMessage = event.data
+                        context.errorMessage = event.data;
                     })
                 }
             },
@@ -204,20 +225,34 @@ export const simpleMachine = createMachine({
                         context.messages[event.responseId] = {
                             ...currentValue,
                             content: currentValue.content + event.chunk
-                        }
+                        };
                     })
                 },
                 STREAM_ERROR: {
                     target: 'idle',
                     actions: assign({
-                        // TODO: Add error message to the responseId
-                        errorMessage: ({event}) => {
-                            return event.error
-                        }
+                        errorMessage: ({event}) => event.error
                     })
                 },
                 COMPLETE: {
                     target: 'idle'
+                }
+            }
+        },
+        deleteAll: {
+            invoke: {
+                src: deleteAllDocuments,
+                onDone: {
+                    target: 'idle',
+                    actions: assign({
+                        successMessage: ({event}) => event.data
+                    })
+                },
+                onError: {
+                    target: 'idle',
+                    actions: assign({
+                        errorMessage: ({event}) => event.data
+                    })
                 }
             }
         }

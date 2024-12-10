@@ -1,22 +1,60 @@
-// components/DocumentGrid.jsx
 import React, {useEffect, useState} from 'react';
-import {RefreshCw} from 'lucide-react';
+import {RefreshCw, Trash2} from 'lucide-react';
 
 export const DocumentGrid = () => {
     const [documents, setDocuments] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [message, setMessage] = useState('');
 
     const fetchDocuments = async () => {
         setIsLoading(true);
+        setDocuments([]); // Clear current documents
         try {
             const response = await fetch('/pinecone/search');
             if (!response.ok) {
                 throw new Error('Failed to fetch documents');
             }
             const data = await response.json();
-            setDocuments(data);
+            setDocuments(data.map(doc => ({
+                ...doc,
+                content: JSON.parse(doc.content).content
+            })));
         } catch (error) {
             console.error('Error fetching documents:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const deleteDocument = async (id) => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(`/pinecone/delete?id=${id}`, { method: 'DELETE' });
+            if (!response.ok) {
+                throw new Error('Failed to delete document');
+            }
+            setMessage('Document deleted successfully');
+            setDocuments(documents.filter(doc => doc.id !== id));
+        } catch (error) {
+            console.error('Error deleting document:', error);
+            setMessage('Failed to delete document');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const deleteCache = async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch('/api/cache/deleteAll', { method: 'DELETE' });
+            if (!response.ok) {
+                throw new Error('Failed to delete cache');
+            }
+            setMessage('Cache deleted successfully');
+            fetchDocuments(); // Refetch documents after cache deletion
+        } catch (error) {
+            console.error('Error deleting cache:', error);
+            setMessage('Failed to delete cache');
         } finally {
             setIsLoading(false);
         }
@@ -30,15 +68,23 @@ export const DocumentGrid = () => {
         <div className="bg-white rounded-lg shadow-md p-4">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">Stored Documents</h2>
-                <button
-                    onClick={fetchDocuments}
-                    className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md"
-                    disabled={isLoading}
-                >
-                    <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''}/>
-                    Refresh
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={fetchDocuments}
+                        className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md"
+                        disabled={isLoading}
+                    >
+                        <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''}/>
+                        Refresh
+                    </button>
+                </div>
             </div>
+
+            {message && (
+                <div className="mb-4 text-center text-green-500">
+                    {message}
+                </div>
+            )}
 
             <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -46,6 +92,7 @@ export const DocumentGrid = () => {
                     <tr className="bg-gray-50 text-left">
                         <th className="px-4 py-2 font-medium">Content</th>
                         <th className="px-4 py-2 font-medium">Metadata</th>
+                        <th className="px-4 py-2 font-medium">Actions</th>
                     </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -59,9 +106,19 @@ export const DocumentGrid = () => {
                                 </div>
                             </td>
                             <td className="px-4 py-2">
-                                    <pre className="text-xs bg-gray-50 p-2 rounded">
-                                        {JSON.stringify(doc.metadata, null, 2)}
-                                    </pre>
+                                <pre className="text-xs bg-gray-50 p-2 rounded">
+                                    {JSON.stringify(doc.metadata, null, 2)}
+                                </pre>
+                            </td>
+                            <td className="px-4 py-2">
+                                <button
+                                    onClick={() => deleteDocument(doc.id)}
+                                    className="flex items-center gap-2 px-3 py-1 text-sm bg-red-100 hover:bg-red-200 rounded-md"
+                                    disabled={isLoading}
+                                >
+                                    <Trash2 size={16} />
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                     ))}

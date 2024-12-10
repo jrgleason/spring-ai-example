@@ -14,11 +14,20 @@ export const useChat = () => {
     };
 
     const generateAudioForMessage = async (messageId, text, send) => {
+        if (!text) {
+            console.warn('No text provided for audio generation');
+            return;
+        }
+
         try {
+            console.log('Generating audio for:', text.substring(0, 50) + '...');
             const audioResponse = await fetch(`/openai/audio?message=${encodeURIComponent(text)}`, {
                 method: 'GET'
             });
-            if (!audioResponse.ok) throw new Error('Audio stream response was not ok');
+
+            if (!audioResponse.ok) {
+                throw new Error(`Audio stream response was not ok: ${audioResponse.status}`);
+            }
 
             await send({
                 type: 'PLAYBACK',
@@ -51,10 +60,23 @@ export const useChat = () => {
             });
             const responseText = await textResponse.text();
 
-            await send({type: 'STREAM', chunk: responseText, responseId: messageId});
+            // Check if it's a cached response by trying to parse as JSON
+            let isCached = false;
+            try {
+                const jsonResponse = JSON.parse(responseText);
+                isCached = jsonResponse.metadata && jsonResponse.metadata.cache_hit;
+            } catch (e) {
+                // Not JSON, so not a cached response
+                isCached = false;
+            }
+
+            // Handle both cached and non-cached responses the same way for UI
+            await send({type: 'STREAM', chunk: isCached ? JSON.parse(responseText).generation.content : responseText, responseId: messageId});
             await send({type: 'COMPLETE'});
 
-            await generateAudioForMessage(messageId, responseText, send);
+            // Generate audio if needed
+            const textForAudio = isCached ? JSON.parse(responseText).generation.content : responseText;
+            await generateAudioForMessage(messageId, textForAudio, send);
             return true;
 
         } catch (error) {
@@ -72,13 +94,20 @@ export const useChat = () => {
         const messageId = uuidv4();
         let completeMessage = '';
 
-        await send({type: 'ASK', message, speaker: "user", responder: "ai", responseId: messageId});
+        await send({
+            type: 'ASK',
+            message,
+            speaker: "user",
+            responder: "ai",
+            responseId: messageId
+        });
 
         try {
             const response = await fetch(`/openai/stream?message=${encodeURIComponent(message)}`, {
                 method: 'GET',
                 headers: {'Content-Type': 'application/json'}
             });
+
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
 
@@ -95,13 +124,19 @@ export const useChat = () => {
             }
 
             await send({type: 'COMPLETE'});
-            if(message.mode !== 'openai-image'){
+
+            if (message.mode !== 'openai-image') {
                 await generateAudioForMessage(messageId, completeMessage, send);
             }
             return true;
 
         } catch (error) {
-            await send({type: 'STREAM_ERROR'});
+            console.error('Error in streamMessage:', error);
+            await send({
+                type: 'STREAM_ERROR',
+                error: 'Failed to get response',
+                responseId: messageId
+            });
             return false;
         } finally {
             setIsLoading(false);
