@@ -36,30 +36,31 @@ const AudioController = () => {
 
     // Handle audio event listeners
     useEffect(() => {
+        console.log("Audio state changed:", state.context.audio);
         const audio = state.context.audio;
-        if (!audio) return;
 
-        const updateProgress = () => setProgress((audio.currentTime / audio.duration) * 100);
+        // Check if audio is a proper Audio element
+        if (!audio || typeof audio.play !== 'function') {
+            return;
+        }
 
-        const handlePlay = () => setIsPlaying(true);
-        const handlePause = () => setIsPlaying(false);
-        const handleEnded = () => {
-            setIsPlaying(false);
-            setProgress(0);
-            resetAudio();
-        };
+        // Only attempt to play if the audio is not already playing
+        if (!audio.paused) {
+            return;
+        }
 
-        audio.addEventListener('play', handlePlay);
-        audio.addEventListener('pause', handlePause);
-        audio.addEventListener('ended', handleEnded);
-        audio.addEventListener('timeupdate', updateProgress);
-
-        return () => {
-            audio.removeEventListener('play', handlePlay);
-            audio.removeEventListener('pause', handlePause);
-            audio.removeEventListener('ended', handleEnded);
-            audio.removeEventListener('timeupdate', updateProgress);
-        };
+        // Wait for browser interaction before trying to play
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise
+                .then(() => {
+                    setIsPlaying(true);
+                })
+                .catch(error => {
+                    console.error('Error playing audio:', error);
+                    setIsPlaying(false);
+                });
+        }
     }, [state.context.audio]);
 
     const togglePlay = () => {

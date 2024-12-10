@@ -16,8 +16,9 @@ export const AddDocumentModal = ({ isOpen, onClose }) => {
         setIsSubmitting(true);
         setError(null);
 
+        let parsedContent;
         try {
-            JSON.parse(content);
+            parsedContent = JSON.parse(content);
         } catch (e) {
             setError("Invalid JSON format");
             setIsSubmitting(false);
@@ -30,7 +31,7 @@ export const AddDocumentModal = ({ isOpen, onClose }) => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ content }),
+                body: JSON.stringify({ content: parsedContent }),
             });
 
             if (!response.ok) {

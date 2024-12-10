@@ -44,8 +44,6 @@ public class CustomRedisVectorStoreConfig {
                                              ObjectProvider<ObservationRegistry> observationRegistry,
                                              ObjectProvider<VectorStoreObservationConvention> customObservationConvention,
                                              BatchingStrategy batchingStrategy) {
-        // Define the metadata fields we want Redis to index and return
-        // Use plain names because RedisVectorStore will add the $. prefix internally
         List<RedisVectorStore.MetadataField> metadataFields = List.of(
                 RedisVectorStore.MetadataField.text("original_answer"),
                 RedisVectorStore.MetadataField.text("original_question"),
@@ -64,7 +62,8 @@ public class CustomRedisVectorStoreConfig {
 
         return new RedisVectorStore(config, embeddingModel,
                 new JedisPooled(jedisConnectionFactory.getHostName(), jedisConnectionFactory.getPort()),
-                true, observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP),
+                true, // This is where initializeSchema is set to true
+                observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP),
                 customObservationConvention.getIfAvailable(() -> null), batchingStrategy);
     }
 }

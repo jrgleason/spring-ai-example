@@ -109,24 +109,25 @@ public class CachedAnswerAdvisor implements CallAroundAdvisor, StreamAroundAdvis
         SearchRequest searchRequest = SearchRequest.query(query).withTopK(1);
         List<Document> results = vectorStore.similaritySearch(searchRequest);
 
-        if (!results.isEmpty()) {
-            Document match = results.getFirst();
-            logger.debug("Found match with ID: {}", match.getId());
-            logger.debug("Match content: {}", match.getContent());
-            logger.debug("Match metadata: {}", match.getMetadata());
-            logger.debug("Match vector score: {}", match.getMetadata().get("vector_score"));
-
-            // Try to parse and log raw JSON content
-            try {
-                logger.debug("Raw document: {}", match);
-            } catch (Exception e) {
-                logger.warn("Failed to parse document as JSON", e);
-            }
-        } else {
+        if (results.isEmpty()) {
             logger.debug("No matches found for query: {}", query);
+            return null;
         }
 
-        return results.isEmpty() ? null : results.getFirst();
+        Document match = results.get(0);
+        logger.debug("Found match with ID: {}", match.getId());
+        logger.debug("Match content: {}", match.getContent());
+        logger.debug("Match metadata: {}", match.getMetadata());
+        logger.debug("Match vector score: {}", match.getMetadata().get("vector_score"));
+
+        // Try to parse and log raw JSON content
+        try {
+            logger.debug("Raw document: {}", match);
+        } catch (Exception e) {
+            logger.warn("Failed to parse document as JSON", e);
+        }
+
+        return match;
     }
 
     private boolean isSimilarEnough(Document match) {

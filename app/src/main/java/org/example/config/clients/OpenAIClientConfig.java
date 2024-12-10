@@ -39,8 +39,8 @@ public class OpenAIClientConfig extends BaseClientConfig {
                 .defaultAdvisors(
                         messageChatMemoryAdvisor,
                         new QuestionAnswerAdvisor(pineconeVectorStore, SearchRequest.defaults()),
-                        new SimpleLoggingAdvisor(),
-                        new CachedAnswerAdvisor(redisVectorStore)
+                        new SimpleLoggingAdvisor()
+//                        new CachedAnswerAdvisor(redisVectorStore)
                 )
                 .defaultFunctions("toggleDevice")
                 .defaultSystem(instructions)

@@ -1,6 +1,14 @@
 import {assign, createMachine, fromPromise} from "xstate";
 import {v4 as uuidv4} from 'uuid';
 
+const deleteAllDocuments = fromPromise(async () => {
+    const response = await fetch('/api/cache/deleteAll', { method: 'DELETE' });
+    if (!response.ok) {
+        throw new Error('Failed to delete all documents');
+    }
+    return 'All documents were deleted successfully';
+});
+
 const handleAudioPlayback = fromPromise(async ({ input, context }) => {
     const audio = new Audio();
     const mediaSource = new MediaSource();
@@ -148,7 +156,8 @@ export const simpleMachine = createMachine({
                 ASK: 'ask',
                 PLAYBACK: {
                     target: 'playback'
-                }
+                },
+                DELETE_ALL: 'deleteAll'
             }
         },
         playback: {
@@ -227,6 +236,23 @@ export const simpleMachine = createMachine({
                 },
                 COMPLETE: {
                     target: 'idle'
+                }
+            }
+        },
+        deleteAll: {
+            invoke: {
+                src: deleteAllDocuments,
+                onDone: {
+                    target: 'idle',
+                    actions: assign({
+                        successMessage: ({event}) => event.data
+                    })
+                },
+                onError: {
+                    target: 'idle',
+                    actions: assign({
+                        errorMessage: ({event}) => event.data
+                    })
                 }
             }
         }

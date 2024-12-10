@@ -53,6 +53,7 @@ dependencies {
     implementation "org.springframework.ai:spring-ai-redis-store-spring-boot-starter:${springAiVersion}"
     implementation 'org.springframework.boot:spring-boot-starter-websocket:3.3.5'
 
+    implementation 'com.google.code.gson:gson:2.11.0'
     implementation 'com.github.ben-manes.caffeine:caffeine'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
