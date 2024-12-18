@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LoadingSpinner } from './LoadingSpinner';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
@@ -15,6 +15,7 @@ import Typography from '@mui/material/Typography';
 import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Paper from '@mui/material/Paper';
+import AudioDebugger from "./AudioDebugger.jsx";
 
 const ChatInterface = () => {
     const { state, send } = useStateContext();
@@ -105,6 +106,7 @@ const ChatInterface = () => {
                                         onSubmit={handleSubmit}
                                         mode={mode}
                                     />
+                                    {/*<AudioDebugger />*/}
                                     <AudioController />
                                 </Stack>
                             </Paper>
