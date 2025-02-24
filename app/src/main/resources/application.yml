@@ -10,15 +10,7 @@ app:
 spring:
   application:
     name: "my-spring-ai"
-  data:
-    redis:
-      host: localhost
-      port: 6379
   ai:
     vectorstore:
-#      redis:
-#        index: spring-ai-example
-#        uri: redis://localhost:6379
       pinecone:
-        apiKey: ${PINECONE_API_KEY}
         index-name: spring-ai-example
