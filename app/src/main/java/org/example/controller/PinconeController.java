@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -33,11 +34,10 @@ public class PinconeController {
     @GetMapping("search")
     public List<Map<String, Object>> searchDocuments() {
         // Retrieve documents similar to a query
-        List<Document> results = this.vectorStore.similaritySearch(SearchRequest.query("Smart Home").withTopK(5));
-
-        return results.stream().map(doc -> Map.of(
+        List<Document> results = this.vectorStore.similaritySearch(SearchRequest.builder().query("Smart Home").topK(5).build());
+        return Objects.requireNonNull(results).stream().map(doc -> Map.of(
                 "id", doc.getId(), // Include the id property
-                "content", doc.getContent(),
+                "content", Objects.requireNonNull(doc.getText()),
                 "metadata", doc.getMetadata()
         )).collect(Collectors.toList());
     }

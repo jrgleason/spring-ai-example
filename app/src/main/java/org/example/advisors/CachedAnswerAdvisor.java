@@ -72,7 +72,7 @@ public class CachedAnswerAdvisor implements CallAroundAdvisor, StreamAroundAdvis
         AdvisedResponse response = chain.nextAroundCall(advisedRequest);
         Generation result = response.response().getResult();
         if (result != null) {
-            cacheResponse(advisedRequest.userText(), result.getOutput().getContent());
+            cacheResponse(advisedRequest.userText(), result.getOutput().getText());
         }
         return response;
     }
@@ -89,24 +89,24 @@ public class CachedAnswerAdvisor implements CallAroundAdvisor, StreamAroundAdvis
         // Collect the responses and build complete content
         StringBuilder completeResponse = new StringBuilder();
         return chain.nextAroundStream(advisedRequest)
-                    .doOnNext(response -> {
-                        // Append each chunk of the response
-                        Generation result = response.response().getResult();
-                        if (result != null) {
-                            completeResponse.append(result.getOutput().getContent());
-                        }
-                    })
-                    .doOnComplete(() -> {
-                        // Cache the complete response
-                        if (!completeResponse.isEmpty()) {
-                            cacheResponse(advisedRequest.userText(), completeResponse.toString());
-                        }
-                    });
+                .doOnNext(response -> {
+                    // Append each chunk of the response
+                    Generation result = response.response().getResult();
+                    if (result != null) {
+                        completeResponse.append(result.getOutput().getText());
+                    }
+                })
+                .doOnComplete(() -> {
+                    // Cache the complete response
+                    if (!completeResponse.isEmpty()) {
+                        cacheResponse(advisedRequest.userText(), completeResponse.toString());
+                    }
+                });
     }
 
     private Document findBestMatch(String query) {
         logger.debug("Searching for query: {}", query);
-        SearchRequest searchRequest = SearchRequest.query(query).withTopK(1);
+        SearchRequest searchRequest = SearchRequest.builder().query(query).topK(1).build();
         List<Document> results = vectorStore.similaritySearch(searchRequest);
 
         if (results.isEmpty()) {
@@ -116,7 +116,7 @@ public class CachedAnswerAdvisor implements CallAroundAdvisor, StreamAroundAdvis
 
         Document match = results.get(0);
         logger.debug("Found match with ID: {}", match.getId());
-        logger.debug("Match content: {}", match.getContent());
+        logger.debug("Match content: {}", match.getText());
         logger.debug("Match metadata: {}", match.getMetadata());
         logger.debug("Match vector score: {}", match.getMetadata().get("vector_score"));
 
@@ -163,10 +163,10 @@ public class CachedAnswerAdvisor implements CallAroundAdvisor, StreamAroundAdvis
 
         // Create response with metadata included
         ChatResponse response = ChatResponse.builder()
-                                            .withMetadata(CACHE_HIT, true)
-                                            .withMetadata(SIMILARITY_SCORE, match.getMetadata().get("vector_score"))
-                                            .withGenerations(List.of(new Generation(new AssistantMessage(originalAnswer))))
-                                            .build();
+                .metadata(CACHE_HIT, true)
+                .metadata(SIMILARITY_SCORE, match.getMetadata().get("vector_score"))
+                .generations(List.of(new Generation(new AssistantMessage(originalAnswer))))
+                .build();
 
         return new AdvisedResponse(response, request.adviseContext());
     }
@@ -200,7 +200,7 @@ public class CachedAnswerAdvisor implements CallAroundAdvisor, StreamAroundAdvis
         }
 
         // Fallback to parsing from content if not in metadata
-        String content = match.getContent();
+        String content = match.getText();
         logger.debug("No answer in metadata, checking content: {}", content);
 
         int answerStart = content.indexOf("Answer: ");

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Description;
+import org.springframework.context.annotation.Profile;
 
 import java.util.function.Function;
 
@@ -29,7 +30,27 @@ public class OpenAIClientConfig extends BaseClientConfig {
     }
 
     @Bean(name = "openAiBuildClient")
+    @Profile("!redis")
     public ChatClient buildClient(
+            @Qualifier("openAiChatClientBuilder") ChatClient.Builder openAiBuilder,
+            MessageChatMemoryAdvisor messageChatMemoryAdvisor,
+            @Qualifier("vectorStore") VectorStore pineconeVectorStore
+    ) {
+        return openAiBuilder
+                .defaultAdvisors(
+                        messageChatMemoryAdvisor,
+                        new QuestionAnswerAdvisor(pineconeVectorStore),
+                        new SimpleLoggingAdvisor()
+                )
+                .defaultTools("toggleDevice")
+                .defaultSystem(instructions)
+                .defaultOptions(new OpenAiChatOptions())
+                .build();
+    }
+
+    @Profile("redis")
+    @Bean(name = "openAiBuildClient")
+    public ChatClient buildRedisClient(
             @Qualifier("openAiChatClientBuilder") ChatClient.Builder openAiBuilder,
             MessageChatMemoryAdvisor messageChatMemoryAdvisor,
             @Qualifier("customRedisVectorStore") VectorStore redisVectorStore,
@@ -38,11 +59,11 @@ public class OpenAIClientConfig extends BaseClientConfig {
         return openAiBuilder
                 .defaultAdvisors(
                         messageChatMemoryAdvisor,
-                        new QuestionAnswerAdvisor(pineconeVectorStore, SearchRequest.defaults()),
-                        new SimpleLoggingAdvisor()
-//                        new CachedAnswerAdvisor(redisVectorStore)
+                        new QuestionAnswerAdvisor(pineconeVectorStore),
+                        new SimpleLoggingAdvisor(),
+                        new CachedAnswerAdvisor(redisVectorStore)
                 )
-                .defaultFunctions("toggleDevice")
+                .defaultTools("toggleDevice")
                 .defaultSystem(instructions)
                 .defaultOptions(new OpenAiChatOptions())
                 .build();

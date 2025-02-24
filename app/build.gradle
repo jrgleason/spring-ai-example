@@ -7,11 +7,9 @@
  */
 
 plugins {
-    id 'com.google.cloud.tools.jib' version '3.4.4'
-    // Apply the application plugin to add support for building a CLI application in Java.
     id 'java'
-    id 'org.springframework.boot' version '3.3.4'
-    id "io.spring.dependency-management" version '1.1.6'
+    id 'org.springframework.boot' version '3.4.3'
+    id 'io.spring.dependency-management' version '1.1.7'
     id 'idea'
 }
 idea {
@@ -29,15 +27,14 @@ repositories {
     }
 }
 
-group = 'org.cbusha'
-version = '0.0.1-SNAPSHOT'
+group = 'jrg.example'
+version = '0.0.2-SNAPSHOT'
 
 ext {
-    springAiVersion = '1.0.0-M3'
+    set('springAiVersion', "1.0.0-M6")
 }
 
 dependencies {
-    implementation platform("org.springframework.ai:spring-ai-bom:${springAiVersion}")
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-logging'
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -47,12 +44,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-integration'
     implementation 'org.springframework.integration:spring-integration-mqtt:6.3.4'
 
-    implementation "org.springframework.ai:spring-ai-openai-spring-boot-starter:${springAiVersion}"
-    implementation "org.springframework.ai:spring-ai-anthropic-spring-boot-starter:${springAiVersion}"
-    implementation "org.springframework.ai:spring-ai-pinecone-store-spring-boot-starter:${springAiVersion}"
-    implementation "org.springframework.ai:spring-ai-redis-store-spring-boot-starter:${springAiVersion}"
+    implementation "org.springframework.ai:spring-ai-openai-spring-boot-starter"
+    implementation "org.springframework.ai:spring-ai-anthropic-spring-boot-starter"
+    implementation "org.springframework.ai:spring-ai-pinecone-store-spring-boot-starter"
+    implementation 'org.springframework.ai:spring-ai-redis-store-spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-websocket:3.3.5'
 
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.4.2'
     implementation 'com.google.code.gson:gson:2.11.0'
     implementation 'com.github.ben-manes.caffeine:caffeine'
     compileOnly 'org.projectlombok:lombok'
@@ -61,6 +59,12 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    }
 }
 
 testing {
@@ -79,59 +83,3 @@ java {
         languageVersion = JavaLanguageVersion.of(23)
     }
 }
-
-bootRun {
-    jvmArgs = [
-//            "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
-    ]
-}
-
-jib {
-    from {
-        image = 'eclipse-temurin:23-jdk'
-    }
-    to {
-        image = '10.0.0.58:30500/spring-ai-example:latest'
-    }
-    container {
-        ports = ['8056']
-        jvmFlags = ['-Xms512m', '-Xmx1024m']
-        mainClass = 'org.example.App'
-    }
-    allowInsecureRegistries = true
-}
-
-def uiProjectDir = file("../ui")
-def uiDistDir = file("../ui/dist")
-
-// Task to run npm install
-tasks.register('npmInstall', Exec) {
-    workingDir uiProjectDir
-    inputs.file("${uiProjectDir}/package.json")
-    outputs.dir("${uiProjectDir}/node_modules")
-
-    // Use bash directly when in WSL
-    commandLine 'bash', '-c', 'npm install'
-}
-
-// Task to build the UI
-tasks.register('buildUi', Exec) {
-    workingDir uiProjectDir
-    inputs.dir("${uiProjectDir}/src")
-    inputs.dir("${uiProjectDir}/node_modules")
-    outputs.dir(uiDistDir)
-    dependsOn npmInstall
-
-    // Use bash directly when in WSL
-    commandLine 'bash', '-c', 'npm run build'
-}
-
-// Task to copy UI build artifacts to resources
-tasks.register('copyUiBuild', Copy) {
-    dependsOn buildUi
-    from uiDistDir
-    into "src/main/resources/static"
-}
-
-// Make sure the UI is built and copied before processing resources
-processResources.dependsOn copyUiBuild

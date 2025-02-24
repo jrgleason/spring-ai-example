@@ -1,69 +1,46 @@
 package org.example.vectorstore;
 
-import io.micrometer.observation.ObservationRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.ai.embedding.BatchingStrategy;
 import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.ai.vectorstore.RedisVectorStore;
-import org.springframework.ai.vectorstore.observation.VectorStoreObservationConvention;
-import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.ai.embedding.TokenCountBatchingStrategy;
+import org.springframework.ai.vectorstore.redis.RedisVectorStore;
+import org.springframework.ai.vectorstore.redis.RedisVectorStore.MetadataField;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.Message;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.context.annotation.Profile;
 import redis.clients.jedis.JedisPooled;
-
-import java.util.List;
 
 
 // TODO: add conditional
 @Configuration
+@Profile("redis")
 public class CustomRedisVectorStoreConfig {
-    private static final Logger logger = LoggerFactory.getLogger(CustomRedisVectorStoreConfig.class);
+    @Value("${spring.data.redis.host}")
+    private String redisHost;
+    @Value("${spring.data.redis.port}")
+    private int redisPort;
 
     @Bean
-    public JedisConnectionFactory redisConnectionFactory() {
-        return new JedisConnectionFactory();
-    }
-
-    @Bean
-    public RedisTemplate<String, Message> redisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, Message> template = new RedisTemplate<>();
-        template.setConnectionFactory(connectionFactory);
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new StringRedisSerializer());
-        return template;
+    public JedisPooled jedisPooled() {
+        return new JedisPooled(
+                redisHost,
+                redisPort
+        );
     }
 
     @Bean(name = "customRedisVectorStore")
-    public RedisVectorStore redisVectorStore(EmbeddingModel embeddingModel, JedisConnectionFactory jedisConnectionFactory,
-                                             ObjectProvider<ObservationRegistry> observationRegistry,
-                                             ObjectProvider<VectorStoreObservationConvention> customObservationConvention,
-                                             BatchingStrategy batchingStrategy) {
-        List<RedisVectorStore.MetadataField> metadataFields = List.of(
-                RedisVectorStore.MetadataField.text("original_answer"),
-                RedisVectorStore.MetadataField.text("original_question"),
-                RedisVectorStore.MetadataField.tag("type")
-        );
+    public RedisVectorStore redisVectorStore(EmbeddingModel embeddingModel,
+                                             JedisPooled jedisPooled) {
 
-        logger.debug("Configuring Redis vector store with metadata fields: {}", metadataFields);
-
-        var config = RedisVectorStore.RedisVectorStoreConfig.builder()
-                                                            .withIndexName("spring-ai-example")
-                                                            .withPrefix("prefix")
-                                                            .withMetadataFields(metadataFields)
-                                                            .build();
-
-        logger.debug("Created Redis vector store config: {}", config);
-
-        return new RedisVectorStore(config, embeddingModel,
-                new JedisPooled(jedisConnectionFactory.getHostName(), jedisConnectionFactory.getPort()),
-                true, // This is where initializeSchema is set to true
-                observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP),
-                customObservationConvention.getIfAvailable(() -> null), batchingStrategy);
+        return RedisVectorStore.builder(jedisPooled, embeddingModel)
+                .indexName("spring-ai-example")
+                .prefix("jrg")
+                .metadataFields(
+                        MetadataField.text("original_answer"),
+                        MetadataField.text("original_question"),
+                        MetadataField.tag("type"))
+                .initializeSchema(true)
+                .batchingStrategy(new TokenCountBatchingStrategy())
+                .build();
     }
 }
