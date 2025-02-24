@@ -1,36 +1,28 @@
-import {defineConfig} from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import Sitemap from 'vite-plugin-sitemap'
+import path from 'path'
+import {fileURLToPath} from 'url'
+import tailwindcss from "@tailwindcss/vite"
 
-let chunkCounter = 0;
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
-const autoIncrementPlugin = () => {
-    return {
-        name: 'auto-increment-plugin',
-        generateBundle(options, bundle) {
-            for (const fileName in bundle) {
-                const chunk = bundle[fileName];
-                if (chunk.type === 'chunk') {
-                    chunkCounter++;
-                    chunk.fileName = `assets/js/chunk-${chunkCounter}.js`;
-                }
-            }
-        }
-    };
-};
-
+// https://vite.dev/config/
 export default defineConfig({
-    plugins: [react(), autoIncrementPlugin()],
-    server: {
-        open: true
+    plugins: [
+        react(),
+        tailwindcss(),
+        Sitemap({
+            outDir: path.resolve(__dirname, '../app/src/main/resources/static')
+        })
+    ],
+    watch: {
+        include: 'src/**'
     },
     build: {
         sourcemap: true,
-        rollupOptions: {
-            output: {
-                entryFileNames: 'assets/js/[name].js',
-                assetFileNames: 'assets/[ext]/[name].[ext]',
-            },
-        },
-    },
-    publicDir: 'public'
-});
+        emptyOutDir: true,
+        outDir: '../app/src/main/resources/static'
+    }
+})

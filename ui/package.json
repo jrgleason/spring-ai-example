@@ -6,28 +6,28 @@
   "scripts": {
     "start": "vite",
     "build": "vite build",
+    "build:watch": "vite build --watch",
     "serve": "vite preview"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@emotion/react": "latest",
-    "@emotion/styled": "latest",
-    "@mui/material": "latest",
-    "@vitejs/plugin-react": "latest",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^6.4.5",
     "@xstate/react": "latest",
     "lucide-react": "latest",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "latest",
+    "react-dom": "latest",
+    "tailwindcss": "next",
     "uuid": "latest",
     "vite": "latest",
     "xstate": "latest"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "latest",
-    "autoprefixer": "latest",
-    "postcss": "latest",
-    "tailwindcss": "latest"
+    "@tailwindcss/vite": "latest",
+    "@vitejs/plugin-react": "latest",
+    "vite-plugin-sitemap": "latest"
   }
 }

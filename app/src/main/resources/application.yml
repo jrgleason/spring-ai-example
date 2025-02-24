@@ -12,9 +12,5 @@ spring:
     name: "my-spring-ai"
   ai:
     vectorstore:
-      redis:
-        index: spring-ai-example
-        uri: redis://localhost:6379
       pinecone:
-        apiKey: ${PINECONE_API_KEY}
         index-name: spring-ai-example

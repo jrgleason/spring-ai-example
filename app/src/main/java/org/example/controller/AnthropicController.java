@@ -26,9 +26,9 @@ public class AnthropicController {
             ) String message
     ) {
         String responseContent = chatClient.prompt()
-                                           .user(message)
-                                           .call()
-                                           .content();
+                .user(message)
+                .call()
+                .content();
         return ResponseEntity.ok(responseContent);
     }
 }
