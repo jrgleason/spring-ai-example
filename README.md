@@ -6,8 +6,8 @@ This is a working spring AI example using Pinecone.
 
 ### Notes
 
-* To use Java 24 you must use Gradle 8.14-rc-2 or higher. The wrapper has been upgraded but it should still work with 23.
-
+* To use Java 24, you must use Gradle 8.14-rc-2 or higher. 
+* The Gradle wrapper has been upgraded and remains compatible with Gradle 23 for projects not using Java 24.
 ### Prerequisites
 
 For the UI make sure you have Node installed.
