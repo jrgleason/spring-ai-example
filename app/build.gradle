@@ -11,12 +11,18 @@ plugins {
     id 'org.springframework.boot' version '3.4.3'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'idea'
+    id "com.github.node-gradle.node" version "7.1.0"
 }
 idea {
     module {
         downloadJavadoc = true
         downloadSources = true
     }
+}
+
+node {
+    download = false
+    nodeProjectDir = file("${project.projectDir}/../ui")
 }
 
 repositories {
@@ -84,4 +90,21 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(24)
     }
+}
+
+
+// Create a custom task for 'npm run build'
+tasks.register('npmBuild', NpmTask) {
+    // Properly reference the npmInstall task
+    dependsOn(tasks.named('npmInstall'))
+
+    // Set the arguments using the proper method
+    setArgs(['run', 'build'])
+}
+
+bootRun {
+    dependsOn npmBuild
+}
+build {
+    dependsOn npmBuild
 }

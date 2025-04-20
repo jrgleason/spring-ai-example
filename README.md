@@ -16,7 +16,7 @@ For the Pinecone, OpenAI and Anthropic functionality please set
 
 ### Using Gradle
 
-* Create an application-personal.yml with the following information
+* Create an application-personal.yml using either `create-personal-config.bat` or `create-personal-config.sh`. It should generate a file with the following template... 
 
 ```yaml
 spring:
