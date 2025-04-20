@@ -25,6 +25,7 @@ spring:
       pinecone:
         environment: <your environment>
         projectId: <your project id>
+        apiKey: ${PINECONE_API_KEY}
 ```
 
 * `export SPRING_PROFILES_ACTIVE=local,personal`
