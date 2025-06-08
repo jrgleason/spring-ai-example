@@ -93,9 +93,8 @@ export const DocumentGrid = () => {
                         <th className="px-4 py-2 font-medium text-secondary-700">Actions</th>
                     </tr>
                     </thead>
-                    <tbody className="divide-y divide-secondary-100">
-                    {documents.map((doc, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
+                    <tbody className="divide-y divide-secondary-100">                    {documents.map((doc, index) => (
+                        <tr key={index} className="hover:bg-surface-50">
                             <td className="px-4 py-2">
                                 <div className="max-h-20 overflow-y-auto">
                                     {typeof doc.content === 'string'

@@ -65,17 +65,16 @@ export const AddDocumentModal = ({ isOpen, onClose }) => {
             <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full p-6">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold">Add Document</h2>
-                    <div className="flex items-center gap-2">
-                        <button
+                    <div className="flex items-center gap-2">                        <button
                             onClick={handleFormat}
-                            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md"
+                            className="px-3 py-1 text-sm bg-surface-100 hover:bg-surface-200 rounded-md"
                             type="button"
                         >
                             Format JSON
                         </button>
                         <button
                             onClick={onClose}
-                            className="text-gray-500 hover:text-gray-700"
+                            className="text-secondary-500 hover:text-secondary-700"
                         >
                             <X size={24} />
                         </button>
@@ -99,19 +98,17 @@ export const AddDocumentModal = ({ isOpen, onClose }) => {
                         )}
                     </div>
 
-                    <div className="flex justify-end gap-4">
-                        <button
+                    <div className="flex justify-end gap-4">                        <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                            className="px-4 py-2 text-secondary-600 hover:text-secondary-800"
                             disabled={isSubmitting}
                         >
                             Cancel
                         </button>
                         <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-blue-300 flex items-center gap-2"
+                            type="submit"                            disabled={isSubmitting}
+                            className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:bg-primary-300 flex items-center gap-2"
                         >
                             {isSubmitting ? 'Adding...' : 'Add Document'}
                         </button>

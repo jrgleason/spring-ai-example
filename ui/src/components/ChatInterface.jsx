@@ -41,31 +41,34 @@ const ChatInterface = () => {
                     : 'Start a conversation...'}
             </Typography>
         </Box>
-    );
-
-    return (
+    );    return (
         <Container maxWidth="md" className="py-4">
-            <Stack spacing={2}>                {/* Controls Bar */} <Paper className="p-4">
-                <Stack direction="row" spacing={4} alignItems="center">
-                    {!isStreaming && <ModeToggle mode={mode} setMode={setMode}/>}
-                    <FormControlLabel
-                        control={<Switch
-                            checked={isStreaming}
-                            onChange={() => setIsStreaming(!isStreaming)}
-                            color="primary"
+            <Stack spacing={2}>
+                {/* Controls Bar */}
+                <Paper className="p-4">
+                    <Stack direction="row" spacing={4} alignItems="center">
+                        {!isStreaming && <ModeToggle mode={mode} setMode={setMode}/>}
+                        <FormControlLabel
+                            control={<Switch
+                                checked={isStreaming}
+                                onChange={() => setIsStreaming(!isStreaming)}
+                                color="primary"
+                            />
+                            }
+                            label={
+                                <Typography variant="body2" className="text-secondary-600">
+                                    Streaming
+                                </Typography>
+                            }
                         />
-                        }
-                        label={
-                            <Typography variant="body2" className="text-secondary-600">
-                                Streaming
-                            </Typography>
-                        }
-                    />
-                </Stack>
-            </Paper> {/* Chat Container */} <Card>
-                <CardContent className="h-[25em] p-0">
-                    <Stack className="h-full">
-                        {/* Messages Area */} <Box className="flex-1 overflow-y-auto p-4">
+                    </Stack>
+                </Paper>
+                
+                {/* Chat Container */}                <Card>
+                    <CardContent className="h-[25em] p-0">
+                        <Stack className="h-full">
+                            {/* Messages Area */}
+                            <Box className="flex-1 overflow-y-auto p-4">
                         {Object.keys(state.context.messages).length === 0 ? (
                             <EmptyState/>
                         ) : (
@@ -82,12 +85,14 @@ const ChatInterface = () => {
                                 {isLoading && (
                                     <Box className="flex justify-center py-2">
                                         <LoadingSpinner/>
-                                    </Box>
-                                )}
+                                    </Box>                                )}
                             </Stack>
                         )}
-                    </Box>{/* Input Area */} <Paper className="p-4 border-t border-secondary-200" elevation={0}>
-                        <Stack spacing={2}>
+                        </Box>
+                        
+                        {/* Input Area */}
+                        <Paper className="p-4 border-t border-secondary-200" elevation={0}>
+                            <Stack spacing={2}>
                             <ChatInput
                                 message={message}
                                 setMessage={setMessage}
@@ -95,16 +100,15 @@ const ChatInterface = () => {
                                 onSubmit={handleSubmit}
                                 mode={mode}
                             />
-                            {/*<AudioDebugger />*/}
-                            <AudioController/>
+                            {/*<AudioDebugger />*/}                            <AudioController/>
                         </Stack>
                     </Paper>
-                    </Stack>
-                </CardContent>
-            </Card>
-            </Stack>
-        </Container>
-    );
+                </Stack>
+            </CardContent>
+        </Card>
+        </Stack>
+    </Container>
+);
 };
 
 export default ChatInterface;

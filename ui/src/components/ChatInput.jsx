@@ -10,13 +10,13 @@ export const ChatInput = ({message, setMessage, isLoading, onSubmit, mode}) => (
             placeholder={mode === 'openai-image'
                 ? "Describe the image you want to generate..."
                 : "Type your message..."}
-            className="flex-1 rounded-lg border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 rounded-lg border border-secondary-300 p-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
             disabled={isLoading}
         />
         <button
             type="submit"
             disabled={isLoading}
-            className="rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:bg-blue-300 flex items-center gap-2"
+            className="rounded-lg bg-primary-500 px-4 py-2 text-white hover:bg-primary-600 disabled:bg-primary-300 flex items-center gap-2"
         >
             {isLoading ? (
                 <>
