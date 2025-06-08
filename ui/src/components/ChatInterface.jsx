@@ -63,7 +63,7 @@ const ChatInterface = () => {
                         />
                     </Stack>
                 </Paper>
-                
+
                 {/* Chat Container */}                <Card>
                     <CardContent className="h-[25em] p-0">
                         <Stack className="h-full">
@@ -89,7 +89,7 @@ const ChatInterface = () => {
                             </Stack>
                         )}
                         </Box>
-                        
+
                         {/* Input Area */}
                         <Paper className="p-4 border-t border-secondary-200" elevation={0}>
                             <Stack spacing={2}>
