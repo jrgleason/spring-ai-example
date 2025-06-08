@@ -83,9 +83,8 @@ const DeviceStateComponent = () => {
 
     return (
         <Card className="w-full max-w-2xl mx-auto my-4">
-            <CardHeader>
-                <h2 className="text-2xl font-bold">Device Control Panel</h2>
-                <div className="text-sm text-gray-500">
+            <CardHeader>                <h2 className="text-2xl font-bold">Device Control Panel</h2>
+                <div className="text-sm text-secondary-500">
                     Status: {connectionStatus}
                 </div>
             </CardHeader>

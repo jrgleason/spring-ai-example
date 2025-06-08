@@ -29,7 +29,7 @@ export const DocumentGrid = () => {
     const deleteDocument = async (id) => {
         setIsLoading(true);
         try {
-            const response = await fetch(`/pinecone/delete?id=${id}`, { method: 'DELETE' });
+            const response = await fetch(`/pinecone/delete?id=${id}`, {method: 'DELETE'});
             if (!response.ok) {
                 throw new Error('Failed to delete document');
             }
@@ -46,7 +46,7 @@ export const DocumentGrid = () => {
     const deleteCache = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch('/api/cache/deleteAll', { method: 'DELETE' });
+            const response = await fetch('/api/cache/deleteAll', {method: 'DELETE'});
             if (!response.ok) {
                 throw new Error('Failed to delete cache');
             }
@@ -64,14 +64,13 @@ export const DocumentGrid = () => {
         fetchDocuments();
     }, []);
 
-    return (
-        <div className="bg-white rounded-lg shadow-md p-4">
+    return (<div className="bg-surface-50 rounded-lg shadow-md p-4">
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">Stored Documents</h2>
+                <h2 className="text-lg font-semibold text-secondary-900">Stored Documents</h2>
                 <div className="flex gap-2">
                     <button
                         onClick={fetchDocuments}
-                        className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md"
+                        className="flex items-center gap-2 px-3 py-1 text-sm bg-secondary-100 hover:bg-secondary-200 rounded-md transition-colors"
                         disabled={isLoading}
                     >
                         <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''}/>
@@ -79,9 +78,8 @@ export const DocumentGrid = () => {
                     </button>
                 </div>
             </div>
-
             {message && (
-                <div className="mb-4 text-center text-green-500">
+                <div className="mb-4 text-center text-accent-600 font-medium">
                     {message}
                 </div>
             )}
@@ -89,15 +87,14 @@ export const DocumentGrid = () => {
             <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                     <thead>
-                    <tr className="bg-gray-50 text-left">
-                        <th className="px-4 py-2 font-medium">Content</th>
-                        <th className="px-4 py-2 font-medium">Metadata</th>
-                        <th className="px-4 py-2 font-medium">Actions</th>
+                    <tr className="bg-secondary-50 text-left">
+                        <th className="px-4 py-2 font-medium text-secondary-700">Content</th>
+                        <th className="px-4 py-2 font-medium text-secondary-700">Metadata</th>
+                        <th className="px-4 py-2 font-medium text-secondary-700">Actions</th>
                     </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
-                    {documents.map((doc, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
+                    <tbody className="divide-y divide-secondary-100">                    {documents.map((doc, index) => (
+                        <tr key={index} className="hover:bg-surface-50">
                             <td className="px-4 py-2">
                                 <div className="max-h-20 overflow-y-auto">
                                     {typeof doc.content === 'string'
@@ -105,18 +102,18 @@ export const DocumentGrid = () => {
                                         : JSON.stringify(doc.content, null, 2)}
                                 </div>
                             </td>
-                            <td className="px-4 py-2">
-                                <pre className="text-xs bg-gray-50 p-2 rounded">
+                            <td className="px-4 py-2">                                <pre
+                                className="text-xs bg-secondary-50 p-2 rounded text-secondary-700">
                                     {JSON.stringify(doc.metadata, null, 2)}
                                 </pre>
                             </td>
                             <td className="px-4 py-2">
                                 <button
                                     onClick={() => deleteDocument(doc.id)}
-                                    className="flex items-center gap-2 px-3 py-1 text-sm bg-red-100 hover:bg-red-200 rounded-md"
+                                    className="flex items-center gap-2 px-3 py-1 text-sm bg-error-100 hover:bg-error-200 text-error-700 rounded-md transition-colors"
                                     disabled={isLoading}
                                 >
-                                    <Trash2 size={16} />
+                                    <Trash2 size={16}/>
                                     Delete
                                 </button>
                             </td>
@@ -124,15 +121,14 @@ export const DocumentGrid = () => {
                     ))}
                     </tbody>
                 </table>
-
                 {documents.length === 0 && !isLoading && (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-secondary-500">
                         No documents found
                     </div>
                 )}
 
                 {isLoading && (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-secondary-500">
                         Loading documents...
                     </div>
                 )}

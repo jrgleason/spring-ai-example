@@ -1,0 +1,22 @@
+/**
+ * Material UI component classes that can be applied directly to MUI components.
+ * This avoids using CSS variables directly in Material UI components
+ * which can cause MUI production errors (https://mui.com/production-error/?code=9)
+ */
+@layer components {
+  /* Custom button classes */
+  .mui-button-primary {
+    background-color: #0ea5e9;
+    color: #ffffff;
+  }
+  
+  .mui-button-primary:hover {
+    background-color: #0284c7;
+  }
+  
+  /* Custom card and paper classes */
+  .mui-card {
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  }
+}

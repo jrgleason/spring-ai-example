@@ -126,20 +126,19 @@ const AudioController = () => {
         audio.pause();
     };
 
-    return (
-        <div className="flex items-center gap-2 max-w-md">
-            <button onClick={togglePlay} className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+    return (        <div className="flex items-center gap-2 max-w-md">
+            <button onClick={togglePlay} className="p-1 rounded-full hover:bg-surface-200 transition-colors"
                     aria-label={isPlaying ? 'Pause' : 'Play'}>
-                {isPlaying ? <Pause size={16} className="text-gray-700"/> : <Play size={16} className="text-gray-700"/>}
+                {isPlaying ? <Pause size={16} className="text-secondary-700"/> : <Play size={16} className="text-secondary-700"/>}
             </button>
-            <button onClick={toggleMute} className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+            <button onClick={toggleMute} className="p-1 rounded-full hover:bg-surface-200 transition-colors"
                     aria-label={isMuted ? 'Unmute' : 'Mute'}>
-                {isMuted ? <VolumeX size={16} className="text-gray-700"/> :
-                    <Volume2 size={16} className="text-gray-700"/>}
+                {isMuted ? <VolumeX size={16} className="text-secondary-700"/> :
+                    <Volume2 size={16} className="text-secondary-700"/>}
             </button>
-            <div ref={progressRef} className="flex-1 h-1 bg-gray-200 rounded-full cursor-pointer relative"
+            <div ref={progressRef} className="flex-1 h-1 bg-surface-200 rounded-full cursor-pointer relative"
                  onClick={handleProgressClick}>
-                <div className="absolute top-0 left-0 h-full bg-blue-500 rounded-full" style={{width: `${progress}%`}}/>
+                <div className="absolute top-0 left-0 h-full bg-primary-500 rounded-full" style={{width: `${progress}%`}}/>
             </div>
         </div>
     );

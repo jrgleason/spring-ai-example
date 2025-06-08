@@ -24,10 +24,8 @@ const AudioDebugger = () => {
                 console.log("Error accessing audio properties:", e);
             }
         }
-    }, [state.context.audio, state.value]);
-
-    return (
-        <div className="p-4 bg-gray-100 rounded-lg">
+    }, [state.context.audio, state.value]);    return (
+        <div className="p-4 bg-surface-100 rounded-lg">
             <h3 className="text-sm font-semibold mb-2">Audio Debug Info</h3>
             <div className="space-y-1 text-xs">
                 <p>Current State: {state.value || 'unknown'}</p>
