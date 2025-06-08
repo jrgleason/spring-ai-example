@@ -44,4 +44,3 @@ app/src/main/resources/static/*
 .DS_Store
 *-personal.yml
 .vscode
-bin
