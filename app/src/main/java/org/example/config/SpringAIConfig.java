@@ -30,15 +30,6 @@ public class SpringAIConfig {
         );
     }
 
-    @Bean
-    @Scope("prototype")
-    ChatClient.Builder anthropicChatClientBuilder(
-            ChatClientBuilderConfigurer configurer,
-            @Qualifier("anthropicChatModel") ChatModel chatModel) {
-        return configurer.configure(
-                ChatClient.builder(chatModel)
-        );
-    }
 
     @Bean
     public MessageChatMemoryAdvisor messageChatMemoryAdvisor() {

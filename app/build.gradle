@@ -24,7 +24,9 @@ java {
 }
 
 node {
-    download = false
+    download = true
+    version = "22.14.0"
+    npmVersion = "11.3.0"
     nodeProjectDir = file("${project.projectDir}/../ui")
 }
 
@@ -47,9 +49,7 @@ dependencies {
     implementation 'org.springframework.integration:spring-integration-mqtt:6.3.4'
 
     implementation "org.springframework.ai:spring-ai-openai-spring-boot-starter"
-    implementation "org.springframework.ai:spring-ai-anthropic-spring-boot-starter"
     implementation "org.springframework.ai:spring-ai-pinecone-store-spring-boot-starter"
-    implementation 'org.springframework.ai:spring-ai-redis-store-spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-websocket:3.3.5'
 
     implementation 'org.apache.httpcomponents.client5:httpclient5:5.4.2'

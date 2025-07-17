@@ -7,8 +7,7 @@ export const useChat = () => {
     const getEndpoint = (mode) => {
         const endpoints = {
             'openai-chat': '/openai',
-            'openai-image': '/openai/image',
-            'anthropic': '/anthropic'
+            'openai-image': '/openai/image'
         };
         return endpoints[mode] || '/openai';
     };
