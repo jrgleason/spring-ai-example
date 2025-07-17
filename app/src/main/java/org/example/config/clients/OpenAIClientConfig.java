@@ -1,6 +1,5 @@
 package org.example.config.clients;
 
-import org.example.advisors.CachedAnswerAdvisor;
 import org.example.advisors.SimpleLoggingAdvisor;
 import org.example.service.DeviceStateService;
 import org.example.service.ToggleFunction;
@@ -8,13 +7,11 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
 import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Description;
-import org.springframework.context.annotation.Profile;
 
 import java.util.function.Function;
 
@@ -30,7 +27,6 @@ public class OpenAIClientConfig extends BaseClientConfig {
     }
 
     @Bean(name = "openAiBuildClient")
-    @Profile("!redis")
     public ChatClient buildClient(
             @Qualifier("openAiChatClientBuilder") ChatClient.Builder openAiBuilder,
             MessageChatMemoryAdvisor messageChatMemoryAdvisor,
@@ -41,27 +37,6 @@ public class OpenAIClientConfig extends BaseClientConfig {
                         messageChatMemoryAdvisor,
                         new QuestionAnswerAdvisor(pineconeVectorStore),
                         new SimpleLoggingAdvisor()
-                )
-                .defaultTools("toggleDevice")
-                .defaultSystem(instructions)
-                .defaultOptions(new OpenAiChatOptions())
-                .build();
-    }
-
-    @Profile("redis")
-    @Bean(name = "openAiBuildClient")
-    public ChatClient buildRedisClient(
-            @Qualifier("openAiChatClientBuilder") ChatClient.Builder openAiBuilder,
-            MessageChatMemoryAdvisor messageChatMemoryAdvisor,
-            @Qualifier("customRedisVectorStore") VectorStore redisVectorStore,
-            @Qualifier("vectorStore") VectorStore pineconeVectorStore
-    ) {
-        return openAiBuilder
-                .defaultAdvisors(
-                        messageChatMemoryAdvisor,
-                        new QuestionAnswerAdvisor(pineconeVectorStore),
-                        new SimpleLoggingAdvisor(),
-                        new CachedAnswerAdvisor(redisVectorStore)
                 )
                 .defaultTools("toggleDevice")
                 .defaultSystem(instructions)

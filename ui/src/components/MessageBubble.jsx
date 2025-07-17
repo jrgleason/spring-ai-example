@@ -29,8 +29,6 @@ export const MessageBubble = ({message}) => {
                 return 'OpenAI';
             case 'openai-image':
                 return 'DALL·E';
-            case 'anthropic':
-                return 'Claude';
             default:
                 return 'AI';
         }
@@ -42,8 +40,6 @@ export const MessageBubble = ({message}) => {
                 return <Sparkles size={12} className="inline"/>;
             case 'openai-image':
                 return <ImageIcon size={12} className="inline"/>;
-            case 'anthropic':
-                return <Bot size={12} className="inline"/>;
             default:
                 return null;
         }

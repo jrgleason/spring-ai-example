@@ -18,12 +18,5 @@ export const ModeToggle = ({mode, setMode}) => (
             onClick={() => setMode('openai-image')}
             description="Generate images with DALL·E"
         />
-        <ToggleButton
-            isActive={mode === 'anthropic'}
-            icon={Bot}
-            label="Claude"
-            onClick={() => setMode('anthropic')}
-            description="Chat with Anthropic's Claude"
-        />
     </div>
 );
